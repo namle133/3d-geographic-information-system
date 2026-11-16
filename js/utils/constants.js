@@ -3,8 +3,11 @@
  */
 
 // API Configuration
+// Set window.__API_BASE_URL in your env-config.js to override for production
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:8080/api/v1',
+  BASE_URL: (typeof window !== 'undefined' && window.__API_BASE_URL)
+    ? window.__API_BASE_URL
+    : 'http://localhost:8080/api/v1',
   TIMEOUT: 10000,
 };
 
