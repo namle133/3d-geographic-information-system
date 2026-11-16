@@ -66,6 +66,7 @@ func runMigrations() error {
 		// Financial Management
 		&models.Invoice{},
 		&models.InvoicePayment{},
+		&models.PaymentTransaction{},
 
 		// Maintenance Management
 		&models.MaintenanceRequest{},

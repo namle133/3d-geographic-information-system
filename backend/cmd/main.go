@@ -19,6 +19,9 @@ func main() {
 	// Load configuration
 	cfg := config.LoadConfig()
 	log.Println("✓ Configuration loaded")
+	if cfg.VNPayTmnCode == "" || cfg.VNPayHashSecret == "" {
+		log.Println("⚠ VNPay chưa cấu hình — đăng ký sandbox tại https://sandbox.vnpayment.vn/devreg/ và điền VNPAY_TMN_CODE, VNPAY_HASH_SECRET vào config/.env")
+	}
 	fmt.Println(cfg)
 	// Initialize database
 	if err := database.InitDatabase(cfg); err != nil {
@@ -50,6 +53,8 @@ func main() {
 		public.GET("/buildings", handlers.GetBuildings)
 		public.GET("/buildings/:id", handlers.GetBuildingByID)
 		public.GET("/gis/apartment-status", handlers.GetGISApartmentStatus)
+		public.GET("/payments/vnpay/ipn", handlers.VNPayIPNCallback(cfg))
+		public.GET("/payments/vnpay/return", handlers.VNPayReturnCallback(cfg))
 	}
 
 	// ========== Protected Routes (Requires Authentication) ==========
@@ -110,6 +115,8 @@ func main() {
 		protected.GET("/invoices/:id", handlers.GetInvoiceByID)
 		protected.PUT("/invoices/:id", middleware.RequireRole("admin", "manager"), handlers.UpdateInvoice)
 		protected.POST("/invoices/:id/payments", middleware.RequireRole("staff", "manager", "admin"), handlers.RecordPayment)
+		protected.POST("/invoices/:id/payments/vnpay", handlers.InitiateVNPayPayment(cfg))
+		protected.GET("/payments/:id", handlers.GetPaymentTransaction(cfg))
 		protected.GET("/invoices/overdue", handlers.GetOverdueInvoices)
 		protected.POST("/reports/financial", handlers.GetFinancialReport)
 

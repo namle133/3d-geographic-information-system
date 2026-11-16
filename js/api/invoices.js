@@ -41,6 +41,27 @@ const invoiceAPI = {
   },
 
   /**
+   * Initiate VNPay online payment
+   */
+  async initiateVNPay(invoiceID) {
+    return apiClient.post(`/invoices/${invoiceID}/payments/vnpay`);
+  },
+
+  /**
+   * Get payment transaction status
+   */
+  async getPaymentStatus(paymentID) {
+    return apiClient.get(`/payments/${paymentID}`);
+  },
+
+  /**
+   * Verify VNPay return callback params with backend
+   */
+  async verifyVNPayReturn(queryString) {
+    return apiClient.get(`/payments/vnpay/return?${queryString}`);
+  },
+
+  /**
    * Get overdue invoices
    */
   async getOverdueInvoices() {

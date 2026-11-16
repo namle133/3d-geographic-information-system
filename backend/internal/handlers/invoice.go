@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/uit/vinhomes-management/internal/database"
 	"github.com/uit/vinhomes-management/internal/models"
+	"github.com/uit/vinhomes-management/internal/services"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -464,35 +465,23 @@ func RecordPayment(c *gin.Context) {
 		return
 	}
 
-	var invoice models.Invoice
-	if err := database.DB.First(&invoice, "id = ?", invoiceID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Invoice not found"})
-		return
-	}
-
 	userID, _ := c.Get("user_id")
 
-	payment := models.InvoicePayment{
-		ID:         uuid.New().String(),
-		InvoiceID:  invoiceID,
-		Amount:     amount,
-		Method:     method,
-		Reference:  reference,
-		PaidAt:     time.Now(),
-		RecordedBy: userID.(string),
-	}
-
-	if err := database.DB.Create(&payment).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to record payment"})
+	paymentSvc := services.NewPaymentService(nil)
+	payment, err := paymentSvc.ApplyPaymentToInvoice(invoiceID, amount, method, reference, userID.(string))
+	if err != nil {
+		switch err {
+		case services.ErrInvoiceNotFound:
+			c.JSON(http.StatusNotFound, gin.H{"error": "Invoice not found"})
+		case services.ErrInvalidAmount:
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Số tiền thanh toán không hợp lệ"})
+		case services.ErrInvoiceNotPayable:
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Hóa đơn không thể thanh toán"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to record payment"})
+		}
 		return
 	}
-
-	invoice.PaidAmount += amount
-	if invoice.PaidAmount >= invoice.TotalAmount {
-		invoice.Status = "paid"
-	}
-
-	database.DB.Save(&invoice)
 
 	c.JSON(http.StatusCreated, gin.H{"data": payment, "success": true})
 }

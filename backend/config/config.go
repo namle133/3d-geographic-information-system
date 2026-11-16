@@ -33,6 +33,13 @@ type Config struct {
 
 	// App
 	AppEnv string
+
+	// VNPay
+	VNPayTmnCode    string
+	VNPayHashSecret string
+	VNPayPayURL     string
+	VNPayReturnURL  string
+	VNPayIPNURL     string
 }
 
 func LoadConfig() *Config {
@@ -57,6 +64,11 @@ func LoadConfig() *Config {
 		SMTPUser:       getEnv("SMTP_USER", ""),
 		SMTPPassword:   getEnv("SMTP_PASSWORD", ""),
 		AppEnv:         getEnv("APP_ENV", "development"),
+		VNPayTmnCode:    getEnv("VNPAY_TMN_CODE", "KD4N9ECY"),
+		VNPayHashSecret: getEnv("VNPAY_HASH_SECRET", "FMKO6A8RUJUP6ZQ2Q7H0QP610AM8BB55"),
+		VNPayPayURL:     getEnv("VNPAY_PAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"),
+		VNPayReturnURL:  getEnv("VNPAY_RETURN_URL", "https://3d-geographic-information-system.vercel.app/pages/payment-result.html"),
+		VNPayIPNURL:     getEnv("VNPAY_IPN_URL", "https://3d-geographic-information-system-production.up.railway.app/api/v1/payments/vnpay/ipn"),
 	}
 }
 

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kết quả thanh toán - Vinhomes</title>
+  <link rel="stylesheet" href="../css/admin.css" />
+  <!-- Runtime environment config -->
+  <script src="../js/env-config.js"></script>
+  <style>
+    .result-card {
+      max-width: 520px;
+      margin: 48px auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+    .result-icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+    }
+    .result-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .result-message {
+      color: #666;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    .result-detail {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: left;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .result-detail div {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .result-detail div:last-child { border-bottom: none; }
+    .result-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-link {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .btn-primary-link {
+      background: #667eea;
+      color: #fff;
+    }
+    .btn-secondary-link {
+      background: #eee;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+  <div class="container">
+    <div class="result-card" id="resultCard">
+      <div class="loading"><div class="spinner"></div></div>
+      <p style="color:#666;margin-top:12px">Đang xác minh thanh toán...</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initLayout } from '../js/modules/layout.js';
+    import invoiceAPI from '../js/api/invoices.js';
+    import { formatCurrency } from '../js/utils/helpers.js';
+
+    await initLayout();
+
+    const params = new URLSearchParams(window.location.search);
+    const card = document.getElementById('resultCard');
+
+    async function renderResult() {
+      const responseCode = params.get('vnp_ResponseCode');
+      const txnRef = params.get('vnp_TxnRef');
+      const amountRaw = params.get('vnp_Amount');
+      const amount = amountRaw ? parseInt(amountRaw, 10) / 100 : 0;
+
+      if (!txnRef) {
+        card.innerHTML = `
+          <div class="result-icon">⚠️</div>
+          <div class="result-title">Không tìm thấy giao dịch</div>
+          <div class="result-message">Thiếu thông tin giao dịch từ VNPay.</div>
+          <div class="result-actions">
+            <a class="btn-link btn-primary-link" href="/pages/invoices.html">Quay lại hóa đơn</a>
+          </div>`;
+        return;
+      }
+
+      let txn = null;
+      let verified = false;
+
+      try {
+        const queryString = window.location.search.slice(1);
+        const res = await invoiceAPI.verifyVNPayReturn(queryString);
+        txn = res.data;
+        verified = res.success === true;
+      } catch (err) {
+        console.warn('Backend verify failed, using response code:', err);
+      }
+
+      const success = verified || responseCode === '00';
+      const status = txn?.status || (success ? 'success' : 'failed');
+
+      if (status === 'success' || success) {
+        card.innerHTML = `
+          <div class="result-icon">✅</div>
+          <div class="result-title">Thanh toán thành công</div>
+          <div class="result-message">Giao dịch đã được xác nhận. Hóa đơn sẽ được cập nhật trong hệ thống.</div>
+          <div class="result-detail">
+            <div><span>Mã giao dịch</span><strong>${txnRef}</strong></div>
+            ${amount ? `<div><span>Số tiền</span><strong>${formatCurrency(amount)}</strong></div>` : ''}
+            ${txn?.provider_txn_id ? `<div><span>Mã VNPay</span><strong>${txn.provider_txn_id}</strong></div>` : ''}
+          </div>
+          <div class="result-actions">
+            <a class="btn-link btn-primary-link" href="/pages/invoices.html">Xem hóa đơn</a>
+            <a class="btn-link btn-secondary-link" href="/pages/resident-dashboard.html">Trang chủ</a>
+          </div>`;
+      } else {
+        card.innerHTML = `
+          <div class="result-icon">❌</div>
+          <div class="result-title">Thanh toán không thành công</div>
+          <div class="result-message">Giao dịch bị hủy hoặc thất bại (mã: ${responseCode || 'unknown'}). Bạn có thể thử lại.</div>
+          <div class="result-detail">
+            <div><span>Mã giao dịch</span><strong>${txnRef}</strong></div>
+          </div>
+          <div class="result-actions">
+            <a class="btn-link btn-primary-link" href="/pages/invoices.html">Thử lại</a>
+          </div>`;
+      }
+    }
+
+    renderResult();
+  </script>
+</body>
+</html>

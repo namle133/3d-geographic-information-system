@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quản lý Hóa đơn - Vinhomes Property Management</title>
   <link rel="stylesheet" href="../css/admin.css" />
+  <!-- Runtime environment config -->
+  <script src="../js/env-config.js"></script>
   <style>
     * {
       margin: 0;
@@ -625,8 +627,6 @@
       }
     }
   </style>
-  <!-- Runtime environment config -->
-  <script src="../js/env-config.js"></script>
 </head>
 <body>
   <div id="navbar-placeholder"></div>
@@ -784,6 +784,7 @@
       <div id="viewDetails"></div>
       <div class="form-buttons">
         <button type="button" class="btn-cancel" id="closeViewDetailsBtn">Đóng</button>
+        <button type="button" class="btn-primary" id="viewPayBtn" style="display:none;background:#1a73e8">Thanh toán VNPay</button>
         <button type="button" class="btn-primary" id="viewEditBtn" style="display:none">Sửa hóa đơn</button>
       </div>
     </div>
@@ -873,6 +874,7 @@
     let lineItemIdCounter = 0;
     const canManage = () => [ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF].includes(currentRole);
     const canEditInvoice = () => [ROLES.ADMIN, ROLES.MANAGER].includes(currentRole);
+    const isResident = () => currentRole === ROLES.RESIDENT;
 
     // Initialize
     async function init() {
@@ -926,6 +928,9 @@
           closeViewModal();
           openEditInvoiceModal(viewingInvoiceId);
         }
+      });
+      document.getElementById('viewPayBtn').addEventListener('click', () => {
+        if (viewingInvoiceId) payWithVNPay(viewingInvoiceId);
       });
 
       // Search and filter
@@ -1123,6 +1128,7 @@
                 const isOverdue = displayStatus === INVOICE_STATUS.OVERDUE;
                 const canEdit = canEditInvoice() && displayStatus !== INVOICE_STATUS.PAID && displayStatus !== INVOICE_STATUS.CANCELLED;
                 const canPay = canManage() && displayStatus !== INVOICE_STATUS.PAID && displayStatus !== INVOICE_STATUS.CANCELLED;
+                const canOnlinePay = (isResident() || canManage()) && displayStatus !== INVOICE_STATUS.PAID && displayStatus !== INVOICE_STATUS.CANCELLED;
                 return `
               <tr ${isOverdue ? 'class="overdue"' : ''}>
                 <td><strong>${invoice.invoice_code || invoice.invoice_number || invoice.id}</strong></td>
@@ -1140,7 +1146,8 @@
                   <div class="action-btns">
                     <button class="btn-sm" onclick="window.invoiceApp.viewInvoice('${invoice.id}')">Xem</button>
                     ${canEdit ? `<button class="btn-sm" onclick="window.invoiceApp.editInvoice('${invoice.id}')">Sửa</button>` : ''}
-                    ${canPay ? `<button class="btn-sm success" onclick="window.invoiceApp.openPaymentModal('${invoice.id}')">Thanh toán</button>` : ''}
+                    ${canOnlinePay ? `<button class="btn-sm success" onclick="window.invoiceApp.payWithVNPay('${invoice.id}')">VNPay</button>` : ''}
+                    ${canPay ? `<button class="btn-sm" onclick="window.invoiceApp.openPaymentModal('${invoice.id}')">Ghi nhận</button>` : ''}
                   </div>
                 </td>
               </tr>
@@ -1346,8 +1353,11 @@
           </div>`;
 
         const editBtn = document.getElementById('viewEditBtn');
+        const payBtn = document.getElementById('viewPayBtn');
         const canEdit = canEditInvoice() && st !== INVOICE_STATUS.PAID && st !== INVOICE_STATUS.CANCELLED;
+        const canOnline = (isResident() || canManage()) && st !== INVOICE_STATUS.PAID && st !== INVOICE_STATUS.CANCELLED && outstanding > 0;
         editBtn.style.display = canEdit ? 'inline-block' : 'none';
+        payBtn.style.display = canOnline ? 'inline-block' : 'none';
 
         document.getElementById('viewModal').classList.add('show');
       } catch (err) {
@@ -1564,6 +1574,22 @@
       }
     }
 
+    async function payWithVNPay(invoiceId) {
+      try {
+        showToast('Đang chuyển đến VNPay...', 'info');
+        const res = await invoiceAPI.initiateVNPay(invoiceId);
+        const data = res.data || res;
+        if (data.payment_url) {
+          window.location.href = data.payment_url;
+        } else {
+          throw new Error('Không nhận được URL thanh toán');
+        }
+      } catch (error) {
+        console.error('VNPay error:', error);
+        showToast(error.message || 'Không thể khởi tạo thanh toán VNPay', 'error');
+      }
+    }
+
     function showFormError(elementId, message) {
       const element = document.getElementById(elementId);
       element.textContent = message;
@@ -1575,6 +1601,7 @@
       viewInvoice,
       editInvoice: openEditInvoiceModal,
       openPaymentModal,
+      payWithVNPay,
       deleteInvoice: async (invoiceId) => {
         if (!canEditInvoice()) return;
         if (!confirm('Bạn có chắc chắn muốn hủy hóa đơn này?')) return;

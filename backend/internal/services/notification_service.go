@@ -93,6 +93,46 @@ func (s *NotificationService) NotifyOverduePayment(invoice *models.Invoice) {
 	}
 }
 
+// NotifyPaymentReceived sends notification when a payment is recorded
+func (s *NotificationService) NotifyPaymentReceived(invoice *models.Invoice, amount float64) {
+	var contract models.Contract
+	if err := database.DB.First(&contract, "id = ?", invoice.ContractID).Error; err != nil {
+		return
+	}
+
+	var resident models.Resident
+	if err := database.DB.First(&resident, "id = ?", contract.ResidentID).Error; err != nil {
+		return
+	}
+
+	outstanding := invoice.TotalAmount - invoice.PaidAmount
+	if outstanding < 0 {
+		outstanding = 0
+	}
+
+	message := fmt.Sprintf("Thanh toán %.0f VND cho hóa đơn %s đã được ghi nhận.", amount, invoice.InvoiceCode)
+	if outstanding > 0 {
+		message = fmt.Sprintf("Thanh toán %.0f VND cho hóa đơn %s. Còn nợ: %.0f VND.", amount, invoice.InvoiceCode, outstanding)
+	} else {
+		message = fmt.Sprintf("Hóa đơn %s đã được thanh toán đủ (%.0f VND).", invoice.InvoiceCode, amount)
+	}
+
+	notification := models.Notification{
+		ID:        uuid.New().String(),
+		UserID:    resident.UserID,
+		Title:     "Thanh toán thành công",
+		Message:   message,
+		Type:      "payment_received",
+		IsRead:    false,
+		RelatedID: invoice.ID,
+		CreatedAt: time.Now(),
+	}
+
+	if err := database.DB.Create(&notification).Error; err != nil {
+		log.Printf("Error creating notification: %v", err)
+	}
+}
+
 // NotifyMaintenanceRequestCreated sends notification to managers
 func (s *NotificationService) NotifyMaintenanceRequestCreated(request *models.MaintenanceRequest) error {
 	var managers []models.Manager

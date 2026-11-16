@@ -209,10 +209,26 @@ type InvoicePayment struct {
 	ID         string    `gorm:"primaryKey" json:"id"`
 	InvoiceID  string    `gorm:"index" json:"invoice_id"`
 	Amount     float64   `json:"amount"`
-	Method     string    `json:"method"`              // cash, transfer, card
+	Method     string    `json:"method"`              // cash, transfer, card, vnpay
 	Reference  string    `json:"reference,omitempty"` // Transaction reference
 	PaidAt     time.Time `json:"paid_at"`
-	RecordedBy string    `json:"recorded_by"` // Staff ID
+	RecordedBy string    `json:"recorded_by"` // Staff ID or "system"
+
+	Invoice Invoice `gorm:"foreignKey:InvoiceID" json:"-"`
+}
+
+type PaymentTransaction struct {
+	ID            string         `gorm:"primaryKey" json:"id"`
+	InvoiceID     string         `gorm:"index" json:"invoice_id"`
+	UserID        string         `gorm:"index" json:"user_id"`
+	Amount        float64        `json:"amount"`
+	Provider      string         `json:"provider"` // vnpay
+	ProviderTxnID string         `gorm:"index" json:"provider_txn_id,omitempty"`
+	Status        string         `json:"status"` // pending, success, failed, expired, cancelled
+	PaymentURL    string         `json:"payment_url,omitempty"`
+	RawCallback   datatypes.JSON `json:"raw_callback,omitempty"`
+	CreatedAt     time.Time      `json:"created_at"`
+	CompletedAt   *time.Time     `json:"completed_at,omitempty"`
 
 	Invoice Invoice `gorm:"foreignKey:InvoiceID" json:"-"`
 }
