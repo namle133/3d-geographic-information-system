@@ -10,11 +10,12 @@ import (
 
 type Config struct {
 	// Database
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
+	DatabaseURL string
+	DBHost      string
+	DBPort      string
+	DBUser      string
+	DBPassword  string
+	DBName      string
 
 	// Server
 	ServerPort string
@@ -40,6 +41,7 @@ func LoadConfig() *Config {
 	jwtExpiry, _ := strconv.Atoi(getEnv("JWT_EXPIRY_HOURS", "24"))
 
 	return &Config{
+		DatabaseURL:    getEnv("DATABASE_URL", ""),
 		// Mặc định: PostgreSQL trong Docker (docker-compose port 5433)
 		DBHost:         getEnv("DB_HOST", "127.0.0.1"),
 		DBPort:         getEnv("DB_PORT", "5433"),
@@ -69,6 +71,9 @@ func loadEnvFiles() {
 }
 
 func (c *Config) GetDSN() string {
+	if c.DatabaseURL != "" {
+		return c.DatabaseURL
+	}
 	host := c.DBHost
 	if host == "localhost" {
 		// Tránh kết nối IPv6 [::1] trùng instance Postgres khác trên máy
