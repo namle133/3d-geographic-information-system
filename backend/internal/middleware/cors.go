@@ -12,6 +12,8 @@ var allowedOrigins = []string{
 	"http://127.0.0.1:5500",
 	"http://localhost:3000",
 	"http://127.0.0.1:3000",
+	// Production - Vercel
+	"https://3d-geographic-information-system.vercel.app",
 }
 
 func isAllowedOrigin(origin string) bool {
@@ -25,6 +27,10 @@ func isAllowedOrigin(origin string) bool {
 	}
 	// Cho phép mọi localhost trong môi trường dev
 	if strings.HasPrefix(origin, "http://localhost:") || strings.HasPrefix(origin, "http://127.0.0.1:") {
+		return true
+	}
+	// Cho phép mọi subdomain vercel.app (preview deployments)
+	if strings.HasSuffix(origin, ".vercel.app") {
 		return true
 	}
 	return false
