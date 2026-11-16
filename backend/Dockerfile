@@ -21,20 +21,13 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd
 # Final stage
 FROM alpine:latest
 
-WORKDIR /root/
+WORKDIR /app
 
 # Install ca-certificates for HTTPS
 RUN apk --no-cache add ca-certificates curl
 
-# Copy binary from builder
-COPY --from=builder /app/main .
-
-# Expose port
-EXPOSE 8080
-
-# Health check
-HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
-  CMD curl -f http://localhost:8080/health || exit 1
+# Copy binary from builder to PATH
+COPY --from=builder /app/main /usr/local/bin/main
 
 # Run application
-CMD ["./main"]
+CMD ["main"]
