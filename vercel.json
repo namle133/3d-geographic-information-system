@@ -1,6 +1,12 @@
 {
   "version": 2,
-  "name": "3d-geographic-information-system",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/pages/login.html",
+      "permanent": false
+    }
+  ],
   "builds": [
     {
       "src": "**/*",
