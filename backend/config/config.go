@@ -46,7 +46,7 @@ func LoadConfig() *Config {
 		DBUser:         getEnv("DB_USER", "vinhomes_user"),
 		DBPassword:     getEnv("DB_PASSWORD", "vinhomes_pass"),
 		DBName:         getEnv("DB_NAME", "vinhomes_db"),
-		ServerPort:     getEnv("SERVER_PORT", "8080"),
+		ServerPort:     getEnv("PORT", getEnv("SERVER_PORT", "8080")),
 		GinMode:        getEnv("GIN_MODE", "debug"),
 		JWTSecret:      getEnv("JWT_SECRET", "your-secret-key"),
 		JWTExpiryHours: jwtExpiry,
@@ -74,8 +74,13 @@ func (c *Config) GetDSN() string {
 		// Tránh kết nối IPv6 [::1] trùng instance Postgres khác trên máy
 		host = "127.0.0.1"
 	}
-	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, c.DBPort, c.DBUser, c.DBPassword, c.DBName)
+	// Railway PostgreSQL requires SSL; local Docker does not
+	sslMode := "disable"
+	if c.AppEnv == "production" {
+		sslMode = "require"
+	}
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		host, c.DBPort, c.DBUser, c.DBPassword, c.DBName, sslMode)
 }
 
 func getEnv(key, defaultValue string) string {
