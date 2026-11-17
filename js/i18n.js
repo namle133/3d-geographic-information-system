@@ -6,6 +6,8 @@
     '02 QUẢN LÝ LỚP DỮ LIỆU': '02 DATA LAYER MANAGEMENT',
     '03 THÔNG TIN PHÂN KHU CHỌN': '03 SELECTED AREA INFORMATION',
     'CẮT LỚP CHIỀU CAO & THI CÔNG': 'HEIGHT SECTION & CONSTRUCTION',
+    '04 ĐIỀU CHỈNH ĐỘ CAO Z-OFFSET': '04 ADJUST HEIGHT Z-OFFSET',
+    '05 TRẠNG THÁI CĂN HỘ (GIS)': '05 APARTMENT STATUS (GIS)',
     'Quản lý Yêu cầu Bảo trì': 'Maintenance Request Management',
     'Quản lý Tòa nhà — Tầng — Căn hộ': 'Building — Floor — Apartment Management',
     'Quản lý Tài khoản': 'Account Management',
@@ -316,6 +318,10 @@
     'Cảnh quan': 'Landscaping',
     'Ánh sáng': 'Lighting',
     'Địa hình & Nền móng': 'Terrain & Foundation',
+    'Nền & Địa hình:': 'Ground & Terrain:',
+    'Chế độ Ban đêm (Night)': 'Night mode',
+    'Dữ liệu backend:': 'Backend data:',
+    'Hiển thị lớp trạng thái': 'Show status layer',
     'Đường xá & Lối đi': 'Roads & Walkways',
     'Cảnh quan Sân vườn': 'Garden Landscaping',
     'Khối đế Thương mại': 'Commercial Podium',
@@ -390,12 +396,18 @@
     'Đang xác minh thanh toán...': 'Verifying payment...',
     'Đổi mật khẩu': 'Change password',
     'Xác Thực': 'Verification',
+    'Mã Xác Thực': 'Verification code',
+    'Mã được cấp khi ký hợp đồng': 'Code provided when signing the contract',
+    'Bạn sẽ nhận được mã này từ phòng bán hàng': 'You will receive this code from the sales office',
     'Bạn sẽ nhận được mã này từ phòng bán hàng': 'You will receive this code from the sales office',
     'Tài Khoản': 'Account',
     'Mật Khẩu': 'Password',
     'Xác Nhận Mật Khẩu': 'Confirm password',
     'Thông Tin Cá Nhân': 'Personal information',
+    'CCCD/CMND': 'National ID',
+    'Ngày Sinh': 'Date of birth',
     'Giới Tính': 'Gender',
+    'Nam': 'Male',
     '-- Chọn giới tính --': '-- Select gender --',
     'Nữ': 'Female',
     'Khác': 'Other',
@@ -885,6 +897,9 @@
     language = nextLanguage === 'en' ? 'en' : 'vi';
     localStorage.setItem(STORAGE_KEY, language);
     document.documentElement.lang = language;
+    document.querySelectorAll('input, select, textarea').forEach((control) => {
+      control.setCustomValidity('');
+    });
     applying = true;
     translateElement(document.body);
     document.querySelectorAll('.site-language-switcher').forEach(updateSwitcher);
@@ -894,6 +909,43 @@
     }
     applying = false;
   }
+
+  function getValidationMessage(control) {
+    if (control.validity.valueMissing) {
+      return language === 'en' ? 'This field is required.' : 'Vui lòng điền trường này.';
+    }
+    if (control.validity.typeMismatch && control.type === 'email') {
+      return language === 'en' ? 'Please enter a valid email address.' : 'Vui lòng nhập địa chỉ email hợp lệ.';
+    }
+    if (control.validity.tooShort) {
+      const length = control.minLength;
+      return language === 'en'
+        ? `Please use at least ${length} characters.`
+        : `Vui lòng nhập ít nhất ${length} ký tự.`;
+    }
+    if (control.validity.tooLong) {
+      const length = control.maxLength;
+      return language === 'en'
+        ? `Please use no more than ${length} characters.`
+        : `Vui lòng nhập không quá ${length} ký tự.`;
+    }
+    return language === 'en' ? 'Please check this field.' : 'Vui lòng kiểm tra trường này.';
+  }
+
+  document.addEventListener('invalid', (event) => {
+    const control = event.target;
+    if (control instanceof HTMLInputElement || control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement) {
+      control.setCustomValidity(getValidationMessage(control));
+    }
+  }, true);
+  document.addEventListener('input', (event) => {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+      event.target.setCustomValidity('');
+    }
+  }, true);
+  document.addEventListener('change', (event) => {
+    if (event.target instanceof HTMLSelectElement) event.target.setCustomValidity('');
+  }, true);
 
   function createSwitcher(segmented = false) {
     if (segmented) {
@@ -931,13 +983,16 @@
       floatingSwitcher.classList.remove('site-language-switcher-floating');
       container.appendChild(floatingSwitcher);
     } else {
-      container.appendChild(createSwitcher(container.classList.contains('login-language-control')));
+      container.appendChild(createSwitcher(
+        container.classList.contains('auth-language-control') ||
+        container.classList.contains('login-language-control')
+      ));
     }
   }
 
   function initialize() {
     document.documentElement.lang = language;
-    const loginLanguage = document.querySelector('.login-language-control');
+    const loginLanguage = document.querySelector('.auth-language-control, .login-language-control');
     const navRight = document.querySelector('.navbar-right');
     if (loginLanguage) {
       mountSwitcher(loginLanguage);
@@ -954,9 +1009,16 @@
       if (applying) return;
       changes.forEach((change) => {
         if (change.type === 'characterData') translateNode(change.target);
+        if (change.type === 'attributes') translateElement(change.target);
         change.addedNodes?.forEach(translateElement);
       });
-    }).observe(document.body, { childList: true, characterData: true, subtree: true });
+    }).observe(document.body, {
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['placeholder', 'title', 'aria-label', 'alt', 'value'],
+      subtree: true
+    });
 
     new MutationObserver(() => {
       const navRightNow = document.querySelector('.navbar-right');
