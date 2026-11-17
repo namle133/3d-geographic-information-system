@@ -184,7 +184,7 @@
     });
 
     async function deactivate(id) {
-      if (!confirm('Vô hiệu hóa tài khoản này?')) return;
+      if (!confirm(window.SiteI18n?.translate('Vô hiệu hóa tài khoản này?') || 'Vô hiệu hóa tài khoản này?')) return;
       try {
         await usersAPI.deleteUser(id);
         showToast('Đã vô hiệu hóa', 'success');

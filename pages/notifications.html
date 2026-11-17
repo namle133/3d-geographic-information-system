@@ -233,7 +233,7 @@
       });
       el.querySelectorAll('.delete-notif').forEach((btn) => {
         btn.addEventListener('click', async () => {
-          if (!confirm('Xóa thông báo này?')) return;
+          if (!confirm(window.SiteI18n?.translate('Xóa thông báo này?') || 'Xóa thông báo này?')) return;
           try {
             await notificationAPI.deleteNotification(btn.dataset.id);
             showToast('Đã xóa', 'success');

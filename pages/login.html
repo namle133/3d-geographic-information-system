@@ -362,6 +362,166 @@
         height: 200px;
       }
     }
+
+    body {
+      background:
+        radial-gradient(circle at 12% 18%, rgba(84, 125, 255, 0.45), transparent 30%),
+        radial-gradient(circle at 88% 82%, rgba(39, 183, 166, 0.25), transparent 28%),
+        linear-gradient(135deg, #111b31 0%, #172b45 55%, #1c3e58 100%);
+      overflow-x: clip;
+      overflow-y: auto;
+    }
+
+    html {
+      overflow-x: clip;
+    }
+
+    .login-container {
+      max-width: 430px;
+      padding: 68px 40px 38px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 24px;
+      box-shadow: 0 28px 80px rgba(4, 15, 32, 0.32), 0 2px 8px rgba(4, 15, 32, 0.08);
+    }
+
+    .login-language-control {
+      position: absolute;
+      top: 20px;
+      right: 22px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px;
+      border: 1px solid #e4e9f1;
+      border-radius: 999px;
+      background: #f7f9fc;
+      color: #64748b;
+    }
+
+    .login-language-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      color: #52647e;
+      font-size: 14px;
+    }
+
+    .site-language-toggle {
+      display: inline-flex;
+      gap: 2px;
+      padding: 3px;
+      border-radius: 999px;
+      background: #e9eef6;
+    }
+
+    .language-option {
+      min-width: 38px;
+      padding: 7px 9px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: #64748b;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .language-option:hover {
+      color: #1d3554;
+    }
+
+    .language-option[aria-pressed="true"] {
+      background: #fff;
+      color: #1d4ed8;
+      box-shadow: 0 1px 4px rgba(15, 35, 65, 0.16);
+    }
+
+    .language-option:focus-visible {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+    }
+
+    .logo {
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 68px;
+      height: 68px;
+      margin-bottom: 16px;
+      border-radius: 20px;
+      background: linear-gradient(145deg, #eaf1ff, #f3edff);
+      color: #3658a8;
+      font-size: 30px;
+      animation: none;
+    }
+
+    .logo h1 {
+      color: #1f2c40;
+      font-size: 29px;
+    }
+
+    .logo p {
+      color: #708099;
+      letter-spacing: 0.12em;
+    }
+
+    input[type='email'],
+    input[type='password'] {
+      border: 1px solid #dfe5ed;
+      border-radius: 10px;
+      background: #fbfcfe;
+    }
+
+    input[type='email']:focus,
+    input[type='password']:focus {
+      border-color: #5276c8;
+      box-shadow: 0 0 0 4px rgba(82, 118, 200, 0.12);
+    }
+
+    .btn-login {
+      border-radius: 10px;
+      background: linear-gradient(135deg, #3157a5 0%, #526fc0 100%);
+      box-shadow: 0 8px 18px rgba(49, 87, 165, 0.22);
+    }
+
+    .btn-login:hover {
+      box-shadow: 0 12px 24px rgba(49, 87, 165, 0.28);
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 68px 25px 32px;
+      }
+
+      .login-language-control {
+        top: 16px;
+        right: 16px;
+      }
+    }
+
+    @media (max-height: 760px) {
+      body {
+        align-items: flex-start;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
   <!-- Runtime environment config -->
   <script src="../js/env-config.js"></script>
@@ -369,6 +529,9 @@
 </head>
 <body>
   <div class="login-container">
+    <div class="login-language-control" role="group" aria-label="Ngôn ngữ">
+      <span class="login-language-icon" aria-hidden="true"><i class="fas fa-globe"></i></span>
+    </div>
     <div class="logo">
       <div class="logo-icon"><i class="fas fa-building"></i></div>
       <h1>Vinhomes</h1>

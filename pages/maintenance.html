@@ -1514,7 +1514,7 @@
         }
       },
       cancelRequest: async (requestId) => {
-        if (!confirm('Bạn có chắc chắn muốn hủy yêu cầu này?')) return;
+        if (!confirm(window.SiteI18n?.translate('Bạn có chắc chắn muốn hủy yêu cầu này?') || 'Bạn có chắc chắn muốn hủy yêu cầu này?')) return;
         try {
           await maintenanceAPI.updateMaintenanceStatus(requestId, 'cancelled');
           showToast('Yêu cầu đã được hủy', 'success');

@@ -511,7 +511,7 @@
 
     // Delete resident
     window.deleteResident = async (id) => {
-      if (!confirm('Bạn có chắc chắn muốn xóa cư dân này?')) return;
+      if (!confirm(window.SiteI18n?.translate('Bạn có chắc chắn muốn xóa cư dân này?') || 'Bạn có chắc chắn muốn xóa cư dân này?')) return;
 
       try {
         // API for delete would go here
