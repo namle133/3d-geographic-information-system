@@ -20,9 +20,8 @@ func main() {
 	cfg := config.LoadConfig()
 	log.Println("✓ Configuration loaded")
 	if cfg.VNPayTmnCode == "" || cfg.VNPayHashSecret == "" {
-		log.Println("⚠ VNPay chưa cấu hình — đăng ký sandbox tại https://sandbox.vnpayment.vn/devreg/ và điền VNPAY_TMN_CODE, VNPAY_HASH_SECRET vào config/.env")
+		log.Println("⚠ VNPay chưa cấu hình — đăng ký sandbox tại https://sandbox.vnpayment.vn/devreg/ và thiết lập VNPAY_TMN_CODE, VNPAY_HASH_SECRET trong biến môi trường")
 	}
-	fmt.Println(cfg)
 	// Initialize database
 	if err := database.InitDatabase(cfg); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
