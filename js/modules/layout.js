@@ -133,6 +133,7 @@ async function initLayout(opts = {}) {
   } else {
     document.body.insertAdjacentHTML('afterbegin', html);
   }
+  window.SiteI18n?.mountSwitcher(document.querySelector('.navbar-right'));
 
   const logoutBtn = document.getElementById('layoutLogoutBtn');
   if (logoutBtn) {
