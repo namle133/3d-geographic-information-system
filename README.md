@@ -23,6 +23,10 @@ This project was developed as an academic project for the **3D Geographic Inform
 
 ## Features
 
+### English and Vietnamese
+
+The website UI is available in English and Vietnamese. Use the language selector on any page to switch languages; the selection is saved in the browser and carried across pages. Vietnamese remains the default for visitors without a saved preference.
+
 ### Interactive 3D Map
 
 The application uses `SceneView` from the ArcGIS Maps SDK for JavaScript to provide an interactive 3D visualization of the Vinhomes West Point complex.

@@ -121,6 +121,25 @@ body {
   margin-left: auto;
 }
 
+.site-language-switcher {
+  border: 1px solid #d8dced;
+  border-radius: 7px;
+  background: #fff;
+  color: #333;
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 9px;
+  cursor: pointer;
+}
+
+.site-language-switcher-floating {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .14);
+}
+
 .notif-btn {
   position: relative;
   background: none;
