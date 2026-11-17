@@ -282,6 +282,7 @@
     function exportCSV() {
       if (!lastReportData) return;
       const { summary: s, debtors, monthly_breakdown: monthly, invoices } = lastReportData;
+      const translate = (value) => window.SiteI18n?.translate(value) ?? value;
       const lines = [
         'BÁO CÁO TÀI CHÍNH - Vinhomes West Point',
         `Tổng phát hành,${s.total_amount}`,
@@ -300,11 +301,12 @@
         ...(monthly || []).map((m) =>
           `${m.billing_period},${m.invoice_count},${m.issued},${m.collected},${m.outstanding}`
         ),
-      ];
+      ].map(translate);
       const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `bao-cao-tai-chinh-${document.getElementById('startDate').value}.csv`;
+      const reportName = window.SiteI18n?.language === 'en' ? 'financial-report' : 'bao-cao-tai-chinh';
+      a.download = `${reportName}-${document.getElementById('startDate').value}.csv`;
       a.click();
     }
 

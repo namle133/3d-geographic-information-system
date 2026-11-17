@@ -1605,7 +1605,7 @@
       payWithVNPay,
       deleteInvoice: async (invoiceId) => {
         if (!canEditInvoice()) return;
-        if (!confirm('Bạn có chắc chắn muốn hủy hóa đơn này?')) return;
+        if (!confirm(window.SiteI18n?.translate('Bạn có chắc chắn muốn hủy hóa đơn này?') || 'Bạn có chắc chắn muốn hủy hóa đơn này?')) return;
         try {
           const res = await invoiceAPI.getInvoiceByID(invoiceId);
           const inv = res.data || res;
