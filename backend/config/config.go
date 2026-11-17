@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -64,12 +65,20 @@ func LoadConfig() *Config {
 		SMTPUser:        getEnv("SMTP_USER", ""),
 		SMTPPassword:    getEnv("SMTP_PASSWORD", ""),
 		AppEnv:          getEnv("APP_ENV", "development"),
-		VNPayTmnCode:    getEnv("VNPAY_TMN_CODE", ""),
-		VNPayHashSecret: getEnv("VNPAY_HASH_SECRET", ""),
+		VNPayTmnCode:    getVNPayEnv("VNPAY_TMN_CODE"),
+		VNPayHashSecret: getVNPayEnv("VNPAY_HASH_SECRET"),
 		VNPayPayURL:     getEnv("VNPAY_PAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"),
 		VNPayReturnURL:  getEnv("VNPAY_RETURN_URL", "https://3d-geographic-information-system.vercel.app/pages/payment-result.html"),
 		VNPayIPNURL:     getEnv("VNPAY_IPN_URL", "https://3d-geographic-information-system-production.up.railway.app/api/v1/payments/vnpay/ipn"),
 	}
+}
+
+func getVNPayEnv(key string) string {
+	value := strings.TrimSpace(getEnv(key, ""))
+	if len(value) >= 2 && ((value[0] == '"' && value[len(value)-1] == '"') || (value[0] == '\'' && value[len(value)-1] == '\'')) {
+		value = strings.TrimSpace(value[1 : len(value)-1])
+	}
+	return value
 }
 
 // loadEnvFiles ưu tiên config/.env rồi .env ở thư mục backend.
