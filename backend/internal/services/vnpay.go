@@ -97,7 +97,7 @@ func (v *VNPayClient) VerifyCallback(params map[string]string) bool {
 
 func (v *VNPayClient) BuildPaymentURL(txnRef, orderInfo, clientIP string, amountVND float64) (string, error) {
 	if !v.Configured() {
-		return "", fmt.Errorf("VNPay chưa được cấu hình — đăng ký sandbox tại https://sandbox.vnpayment.vn/devreg/ và cập nhật VNPAY_TMN_CODE, VNPAY_HASH_SECRET")
+		return "", fmt.Errorf("VNPay chưa được cấu hình — đăng ký sandbox tại https://sandbox.vnpayment.vn/devreg/ và thiết lập VNPAY_TMN_CODE, VNPAY_HASH_SECRET trong biến môi trường")
 	}
 
 	loc, err := time.LoadLocation("Asia/Ho_Chi_Minh")
