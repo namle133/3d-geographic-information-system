@@ -71,6 +71,10 @@ func (v *VNPayClient) sign(params map[string]string) string {
 	return hex.EncodeToString(mac.Sum(nil))
 }
 
+func vnpayAmountInMinorUnits(amountVND float64) int64 {
+	return int64(math.Round(amountVND * 100))
+}
+
 func copyVNPayParams(src map[string]string) map[string]string {
 	dst := make(map[string]string, len(src))
 	for k, v := range src {
@@ -103,7 +107,7 @@ func (v *VNPayClient) BuildPaymentURL(txnRef, orderInfo, clientIP string, amount
 	now := time.Now().In(loc)
 	expire := now.Add(15 * time.Minute)
 
-	amountInt := int64(math.Round(amountVND * 100))
+	amountInt := vnpayAmountInMinorUnits(amountVND)
 	if amountInt <= 0 {
 		return "", fmt.Errorf("số tiền thanh toán không hợp lệ")
 	}

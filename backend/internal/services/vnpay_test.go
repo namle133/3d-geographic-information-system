@@ -68,3 +68,19 @@ func TestClientIPFromAddr(t *testing.T) {
 		})
 	}
 }
+func TestVNPayAmountInMinorUnitsRoundsFractionalVND(t *testing.T) {
+	tests := []struct {
+		amount float64
+		want   int64
+	}{
+		{amount: 1000, want: 100000},
+		{amount: 1000.1, want: 100010},
+		{amount: 1000.29, want: 100029},
+	}
+
+	for _, tt := range tests {
+		if got := vnpayAmountInMinorUnits(tt.amount); got != tt.want {
+			t.Errorf("vnpayAmountInMinorUnits(%v) = %d, want %d", tt.amount, got, tt.want)
+		}
+	}
+}

@@ -3,6 +3,7 @@
  */
 
 import apiClient from './client.js';
+import { API_CONFIG } from '../utils/constants.js';
 
 const invoiceAPI = {
   /**
@@ -55,10 +56,29 @@ const invoiceAPI = {
   },
 
   /**
-   * Verify VNPay return callback params with backend
+   * Verify the signed VNPay return callback without requiring an active session.
    */
   async verifyVNPayReturn(queryString) {
-    return apiClient.get(`/payments/vnpay/return?${queryString}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+    try {
+      const response = await fetch(
+        `${apiClient.baseURL}/payments/vnpay/return?${queryString}`,
+        { headers: { Accept: 'application/json' }, signal: controller.signal }
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || `HTTP ${response.status}`);
+      }
+      return result;
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('Timed out while verifying the VNPay payment');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   },
 
   /**
