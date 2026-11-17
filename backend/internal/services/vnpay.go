@@ -130,12 +130,15 @@ func (v *VNPayClient) BuildPaymentURL(txnRef, orderInfo, clientIP string, amount
 }
 
 func ClientIPFromAddr(addr string) string {
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
+	host := addr
+	if parsedHost, _, err := net.SplitHostPort(addr); err == nil {
+		host = parsedHost
+	}
+
+	host = strings.Trim(host, "[]")
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsLoopback() {
 		return "127.0.0.1"
 	}
-	if host == "" || host == "::1" {
-		return "127.0.0.1"
-	}
-	return host
+	return ip.String()
 }

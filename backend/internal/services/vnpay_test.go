@@ -46,3 +46,25 @@ func TestVNPayBuildPaymentURLRequiresConfig(t *testing.T) {
 		t.Fatal("expected error when VNPay is not configured")
 	}
 }
+
+func TestClientIPFromAddr(t *testing.T) {
+	tests := []struct {
+		name string
+		addr string
+		want string
+	}{
+		{name: "bare IPv4 returned by Gin", addr: "203.0.113.42", want: "203.0.113.42"},
+		{name: "IPv4 with port", addr: "203.0.113.42:8080", want: "203.0.113.42"},
+		{name: "IPv6 with port", addr: "[2001:db8::1]:8080", want: "2001:db8::1"},
+		{name: "loopback", addr: "::1", want: "127.0.0.1"},
+		{name: "invalid address", addr: "", want: "127.0.0.1"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ClientIPFromAddr(tt.addr); got != tt.want {
+				t.Errorf("ClientIPFromAddr(%q) = %q, want %q", tt.addr, got, tt.want)
+			}
+		})
+	}
+}
