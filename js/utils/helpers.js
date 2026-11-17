@@ -5,25 +5,36 @@
 /**
  * Format date to readable string
  */
+function getLocale() {
+  return typeof window !== 'undefined' && window.SiteI18n?.language === 'en' ? 'en-US' : 'vi-VN';
+}
+
 function formatDate(date, format = 'dd/mm/yyyy') {
   if (!date) return '';
   const d = new Date(date);
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = d.getFullYear();
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const locale = getLocale();
+  if (Number.isNaN(d.getTime())) return d.toLocaleString(locale);
 
-  if (format === 'dd/mm/yyyy') return `${day}/${month}/${year}`;
-  if (format === 'dd/mm/yyyy hh:mm') return `${day}/${month}/${year} ${hours}:${minutes}`;
-  return d.toLocaleString();
+  if (format === 'dd/mm/yyyy') {
+    return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+  }
+  if (format === 'dd/mm/yyyy hh:mm') {
+    return new Intl.DateTimeFormat(locale, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d);
+  }
+  return d.toLocaleString(locale);
 }
 
 /**
  * Format currency
  */
 function formatCurrency(amount) {
-  return new Intl.NumberFormat('vi-VN', {
+  return new Intl.NumberFormat(getLocale(), {
     style: 'currency',
     currency: 'VND',
   }).format(amount);
@@ -33,7 +44,7 @@ function formatCurrency(amount) {
  * Format number with thousand separators
  */
 function formatNumber(num) {
-  return new Intl.NumberFormat('vi-VN').format(num);
+  return new Intl.NumberFormat(getLocale()).format(num);
 }
 
 /**

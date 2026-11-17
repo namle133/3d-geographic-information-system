@@ -107,7 +107,7 @@
   <script type="module">
     import { initLayout } from '../js/modules/layout.js';
     import buildingsAPI from '../js/api/buildings.js';
-    import { showToast } from '../js/utils/helpers.js';
+    import { formatCurrency, showToast } from '../js/utils/helpers.js';
 
     await initLayout({ requiredRoles: ['admin', 'manager', 'staff'] });
 
@@ -189,7 +189,7 @@
           <td>${a.area ? a.area + ' m²' : '-'}</td>
           <td>${a.bedrooms || '-'}</td>
           <td>${a.direction || '-'}</td>
-          <td>${a.listing_price ? a.listing_price.toLocaleString('vi-VN') + ' đ' : '-'}</td>
+          <td>${a.listing_price ? formatCurrency(a.listing_price) : '-'}</td>
           <td><span class="badge ${STATUS_BADGE[a.current_status] || 'badge-gray'}">${STATUS_LABEL[a.current_status] || a.current_status}</span></td>
           <td><button class="btn btn-sm btn-outline update-status" data-id="${a.id}">Đổi TT</button></td>
         </tr>`).join('')}</tbody></table></div>`;
