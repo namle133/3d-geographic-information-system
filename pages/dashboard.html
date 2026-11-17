@@ -105,7 +105,7 @@
           <div class="kpi-card green">
             <div class="kpi-label">Doanh thu tháng</div>
             <div class="kpi-value" style="font-size:20px">${formatCurrency(k.monthly_revenue || 0)}</div>
-            <div class="kpi-sub">Từ HĐ active · Đã thu: ${formatCurrency(k.monthly_collected || 0)}</div>
+            <div class="kpi-sub">Từ hợp đồng đang hoạt động · Đã thu: ${formatCurrency(k.monthly_collected || 0)}</div>
           </div>
           <div class="kpi-card red" style="cursor:pointer" title="Cuộn xuống danh sách quá hạn" onclick="document.getElementById('overdueInvoices').scrollIntoView({behavior:'smooth'})">
             <div class="kpi-label">Hóa đơn quá hạn</div>

@@ -154,8 +154,8 @@
       el.innerHTML = `<div class="table-responsive"><table>
         <thead><tr><th>Mã</th><th>Loại</th><th>Ưu tiên</th><th>Trạng thái</th><th>Ngày tạo</th></tr></thead>
         <tbody>${requests.map(r => {
-          const pri = { low: 'Thấp', normal: 'TB', urgent: 'Khẩn' }[r.priority] || r.priority;
-          const st = { new: 'Mới', assigned: 'Đã PC', in_progress: 'Đang XL', completed: 'Xong', cancelled: 'Hủy' }[r.status] || r.status;
+          const pri = { low: 'Thấp', normal: 'Trung bình', urgent: 'Khẩn cấp' }[r.priority] || r.priority;
+          const st = { new: 'Mới', assigned: 'Đã phân công', in_progress: 'Đang xử lý', completed: 'Hoàn thành', cancelled: 'Đã hủy' }[r.status] || r.status;
           return `<tr>
           <td>${r.request_code || r.id}</td>
           <td>${r.issue_type || '-'}</td>

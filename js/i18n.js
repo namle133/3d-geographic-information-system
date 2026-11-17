@@ -89,7 +89,7 @@
     'Đang bảo trì': 'Under maintenance',
     'Cần theo dõi': 'Needs attention',
     'Doanh thu tháng': 'Monthly revenue',
-    'Từ HĐ active · Đã thu:': 'From active contracts · Collected:',
+    'Từ hợp đồng đang hoạt động · Đã thu:': 'From active contracts · Collected:',
     'Sắp hết HĐ': 'Expiring soon',
     'Mở GIS 3D →': 'Open 3D GIS →',
     'Tòa nhà': 'Buildings',
@@ -149,8 +149,10 @@
     'Không có hóa đơn quá hạn': 'No overdue invoices',
     'Không có yêu cầu chờ xử lý': 'No requests awaiting action',
     'Không có hợp đồng sắp hết hạn': 'No contracts expiring soon',
+    'hóa đơn quá hạn': 'overdue invoices',
     'Không có dữ liệu': 'No data available',
     'Chưa có dữ liệu': 'No data available yet',
+    'Không xác định': 'Unknown',
     'Đã cập nhật trạng thái — GIS 3D sẽ đổi màu': 'Status updated — the 3D GIS will update its colors',
     'Cuộn xuống danh sách quá hạn': 'Scroll to the overdue list',
     'Danh sách căn hộ': 'Apartment list',
@@ -237,6 +239,9 @@
     'Tầng:': 'Floor:',
     'Căn hộ:': 'Apartment:',
     'Trạng thái:': 'Status:',
+    'Tên phần tử:': 'Element name:',
+    'Mã phân khu:': 'Zone ID:',
+    'Phân bổ:': 'Distribution:',
     'Hết HĐ:': 'Contract ends:',
     'Nền sân dự án (Xám đậm)': 'Project ground (dark gray)',
     'Đường Phạm Hùng': 'Pham Hung Road',
@@ -246,6 +251,7 @@
     'Mái kính bể bơi': 'Pool glass canopy',
     'Khu thiền yoga': 'Yoga and meditation area',
     'Khu ngắm cảnh thành phố': 'City viewing area',
+    'Bờ hồ': 'Poolside',
     'Ghế nghỉ': 'Rest bench',
     'Người dùng': 'Users',
     'Cư dân': 'Residents',
@@ -347,6 +353,8 @@
     'Chờ duyệt': 'Pending approval',
     'Gia hạn': 'Renew',
     'Kết thúc': 'Terminate',
+    'Đã gia hạn': 'Extended',
+    'Đã kết thúc': 'Terminated',
     '-- Chọn cư dân --': '-- Select resident --',
     '-- Chọn tài khoản --': '-- Select account --',
     '-- Chọn phương thức --': '-- Select payment method --',
@@ -358,6 +366,9 @@
     'Xử lý hợp đồng': 'Manage contract',
     'Nhập các điều khoản và điều kiện của hợp đồng...': 'Enter the terms and conditions of the contract...',
     'Duyệt hợp đồng': 'Approve contract',
+    'Duyệt': 'Approve',
+    'Đã TT': 'Paid',
+    'Vui lòng chọn căn hộ': 'Please select an apartment',
     'Gia hạn hợp đồng': 'Extend contract',
     'Quên mật khẩu': 'Forgot password',
     'Bước 1 / 2': 'Step 1 / 2',
@@ -398,7 +409,6 @@
     'Xác Thực': 'Verification',
     'Mã Xác Thực': 'Verification code',
     'Mã được cấp khi ký hợp đồng': 'Code provided when signing the contract',
-    'Bạn sẽ nhận được mã này từ phòng bán hàng': 'You will receive this code from the sales office',
     'Bạn sẽ nhận được mã này từ phòng bán hàng': 'You will receive this code from the sales office',
     'Tài Khoản': 'Account',
     'Mật Khẩu': 'Password',
@@ -453,6 +463,8 @@
     'Sàn tầng 4': 'Level 4 slab',
     'Sàn tầng 5': 'Level 5 slab',
     'Siêu thị WinMart': 'WinMart supermarket',
+    'Nhân viên an ninh': 'Security staff',
+    'Cư dân Officetel': 'Officetel resident',
     'Cửa hàng Thời trang Zara': 'Zara fashion store',
     'Cửa hàng Apple Store': 'Apple Store',
     'Nhà hàng Haidilao Hotpot': 'Haidilao Hotpot restaurant',
@@ -484,6 +496,8 @@
     'Bóng đèn': 'Light bulb ',
     'Thảm cỏ trung tâm': 'Central lawn',
     'Sân chơi trẻ em': 'Children’s playground',
+    ' căn hộ': ' apartments',
+    ' tầng': ' floors',
     'căn hộ': 'apartment',
     'Diện tích (m²)': 'Area (m²)',
     'Bạn có chắc muốn đăng xuất khỏi hệ thống? Phiên làm việc hiện tại sẽ kết thúc.': 'Are you sure you want to log out? Your current session will end.',
@@ -567,7 +581,6 @@
     'Xác nhận mật khẩu mới': 'Confirm new password',
     'Cập nhật mật khẩu': 'Update password',
     'Đăng ký tài khoản cư dân': 'Register a resident account',
-    'Mã được cấp khi ký hợp đồng': 'Code provided when signing the contract',
     'Tên Đăng Nhập': 'Username',
     'Họ Tên Đầy Đủ': 'Full name',
     'Tất cả trong kỳ': 'All in period',
@@ -599,12 +612,12 @@
     'Mật khẩu phải có ít nhất 6 ký tự': 'Password must be at least 6 characters',
     'Đặt lại mật khẩu thành công! Đang chuyển đến trang đăng nhập...': 'Password reset successfully! Redirecting to the login page...',
     'Đặt lại mật khẩu thất bại': 'Password reset failed',
-    '— Chưa có cư dân có HĐ active —': '— No residents with an active contract —',
+    '— Chưa có cư dân có hợp đồng đang hoạt động —': '— No residents with an active contract —',
     '— Không có căn hộ —': '— No apartments available —',
     'Hóa đơn đã được cập nhật': 'Invoice updated',
     'Hóa đơn đã được tạo thành công': 'Invoice created successfully',
     'Thanh toán đã được ghi nhận': 'Payment recorded',
-    '— Chưa có căn hộ thuê (cần HĐ active) —': '— No rented apartments (requires an active contract) —',
+    '— Chưa có căn hộ thuê (cần hợp đồng đang hoạt động) —': '— No rented apartments (requires an active contract) —',
     'Yêu cầu bảo trì đã được tạo thành công': 'Maintenance request created successfully',
     'Vui lòng chọn nhân viên': 'Please select a staff member',
     'Yêu cầu bảo trì đã được hoàn thành': 'Maintenance request completed',
@@ -683,7 +696,76 @@
     '(để trống nếu không đổi)': '(leave blank to keep unchanged)',
     'Vách kỹ thuật tháp ': 'Tower technical shaft ',
     'Hóa đơn đã được hủy': 'Invoice cancelled',
-    'Không thể gửi yêu cầu': 'Unable to send the request'
+    'Không thể gửi yêu cầu': 'Unable to send the request',
+    'Không tìm thấy giao dịch': 'Transaction not found',
+    'Thiếu thông tin giao dịch từ VNPay.': 'Missing transaction information from VNPay.',
+    'Quay lại hóa đơn': 'Back to invoices',
+    'Giao dịch đã được xác nhận. Hóa đơn sẽ được cập nhật trong hệ thống.': 'The transaction has been confirmed. The invoice will be updated in the system.',
+    'Mã giao dịch': 'Transaction ID',
+    'Xem hóa đơn': 'View invoice',
+    'Trang chủ': 'Home',
+    'Thanh toán không thành công': 'Payment failed',
+    'Giao dịch bị hủy hoặc thất bại (mã:': 'The transaction was cancelled or failed (code:',
+    '). Bạn có thể thử lại.': '). You can try again.',
+    'Lưu thay đổi': 'Save changes',
+    'Tổng:': 'Total:',
+    'Không có thông báo': 'No notifications',
+    '(Đang thuê)': '(Rented)',
+    'Chưa có hợp đồng nào': 'No contracts yet',
+    'Số hợp đồng': 'Contract number',
+    'Tiền thuê': 'Rent',
+    'Thao tác': 'Actions',
+    'Tiền thuê/tháng:': 'Monthly rent:',
+    'Tiền cọc:': 'Security deposit:',
+    'Xác nhận duyệt hợp đồng này?': 'Are you sure you want to approve this contract?',
+    'Ngày kết thúc mới *': 'New end date *',
+    'Lý do *': 'Reason *',
+    'Xin chào': 'Hello',
+    'Bảo trì đang xử lý': 'Maintenance in progress',
+    'Yêu cầu chưa hoàn thành': 'Open requests',
+    'Thông báo chưa đọc': 'Unread notifications',
+    'Mã HĐ': 'Contract No.',
+    'Hạn': 'Due',
+    'Ưu tiên': 'Priority',
+    'Chưa có cư dân nào': 'No residents yet',
+    '% tỷ lệ lấp đầy': '% occupancy rate',
+    'Trong 30 ngày tới': 'Within the next 30 days',
+    'Bảo trì chờ xử lý': 'Pending maintenance',
+    'Cần phân công': 'Needs assignment',
+    'Còn lại': 'Remaining',
+    'Kiểm tra backend đang chạy.': 'Check that the backend is running.',
+    'Tổng còn nợ (hiển thị):': 'Total outstanding (shown):',
+    'Chưa có tài khoản': 'No accounts yet',
+    'Không có hóa đơn nào': 'No invoices found',
+    'Ghi nhận': 'Record',
+    'Hạng mục': 'Line item',
+    'Không có yêu cầu bảo trì nào': 'No maintenance requests found',
+    'Yêu cầu #': 'Request #',
+    'Bắt đầu': 'Start',
+    'Hóa đơn phát hành': 'Invoices issued',
+    'Trong kỳ báo cáo': 'In the reporting period',
+    'Tỷ lệ thu:': 'Collection rate:',
+    'Còn nợ (trong kỳ)': 'Outstanding (in period)',
+    'Doanh thu thuê dự kiến': 'Expected rental revenue',
+    'Từ hợp đồng đang hoạt động trong kỳ': 'From active contracts in period',
+    'Công nợ hiện tại': 'Current outstanding balance',
+    'cư dân nợ': 'residents with outstanding balances',
+    'Chờ:': 'Pending:',
+    '· Đã TT:': '· Paid:',
+    'Kỳ TT': 'Billing period',
+    'Số HĐ': 'Invoice count',
+    'Phát hành': 'Issued',
+    'Không có công nợ': 'No outstanding balances',
+    'Số HĐ nợ': 'Invoices owed',
+    'Tổng nợ': 'Total owed',
+    'Hạn gần nhất': 'Nearest due date',
+    'Không có hóa đơn trong kỳ': 'No invoices in this period',
+    'Chưa có tòa nhà. Nhấn "+ Thêm tòa nhà" để bắt đầu.': 'No buildings yet. Click "+ Add building" to get started.',
+    'Số tầng': 'Number of floors',
+    'Mã căn': 'Unit number',
+    'Diện tích': 'Area',
+    'Hướng': 'Orientation',
+    'Giá thuê': 'Rent'
   };
   const entries = Object.entries(translations).sort((a, b) => b[0].length - a[0].length);
   const reverseTranslations = new Map();
@@ -812,6 +894,42 @@
     'Equipment Maintenance Due': 'Đến hạn bảo trì thiết bị',
     'Payment Successful': 'Thanh toán thành công'
   }).forEach(([source, target]) => reverseTranslations.set(source, target));
+  reverseTranslations.set('Backend offline', 'Máy chủ ngoại tuyến');
+  const reverseEntries = [...reverseTranslations.entries()]
+    .filter(([source]) => source.length >= 4)
+    .sort((a, b) => b[0].length - a[0].length);
+  const enumTranslations = {
+    admin: { en: 'Administrator', vi: 'Quản trị viên' },
+    manager: { en: 'Manager', vi: 'Ban quản lý' },
+    staff: { en: 'Staff', vi: 'Nhân viên' },
+    resident: { en: 'Resident', vi: 'Cư dân' },
+    empty: { en: 'Vacant', vi: 'Trống' },
+    unknown: { en: 'Unknown', vi: 'Không xác định' },
+    rented: { en: 'Rented', vi: 'Đang thuê' },
+    maintenance: { en: 'Under maintenance', vi: 'Bảo trì' },
+    reserved: { en: 'Reserved', vi: 'Đặt trước' },
+    pending: { en: 'Pending', vi: 'Đang chờ xử lý' },
+    active: { en: 'Active', vi: 'Đang hoạt động' },
+    inactive: { en: 'Inactive', vi: 'Không hoạt động' },
+    locked: { en: 'Locked', vi: 'Đã khóa' },
+    extended: { en: 'Extended', vi: 'Gia hạn' },
+    terminated: { en: 'Terminated', vi: 'Đã kết thúc' },
+    expired: { en: 'Expired', vi: 'Hết hạn' },
+    draft: { en: 'Draft', vi: 'Nháp' },
+    issued: { en: 'Issued', vi: 'Đã phát hành' },
+    paid: { en: 'Paid', vi: 'Đã thanh toán' },
+    overdue: { en: 'Overdue', vi: 'Quá hạn' },
+    cancelled: { en: 'Cancelled', vi: 'Đã hủy' },
+    new: { en: 'New', vi: 'Mới' },
+    assigned: { en: 'Assigned', vi: 'Đã phân công' },
+    in_progress: { en: 'In progress', vi: 'Đang xử lý' },
+    completed: { en: 'Completed', vi: 'Đã hoàn thành' },
+    low: { en: 'Low', vi: 'Thấp' },
+    normal: { en: 'Medium', vi: 'Trung bình' },
+    medium: { en: 'Medium', vi: 'Trung bình' },
+    high: { en: 'High', vi: 'Cao' },
+    urgent: { en: 'Urgent', vi: 'Khẩn cấp' }
+  };
   const originals = new WeakMap();
   let language = localStorage.getItem(STORAGE_KEY) === 'en' ? 'en' : 'vi';
   let applying = false;
@@ -830,15 +948,32 @@
       `Thiết bị '${name}' (${type}) đã đến hạn bảo trì`]
   ];
 
+  function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function translateEnumValues(value) {
+    const trimmed = value.trim();
+    const labels = enumTranslations[trimmed.toLowerCase()];
+    return labels ? value.replace(trimmed, labels[language]) : value;
+  }
+
   function translateText(value) {
     if (language === 'en') {
-      return entries.reduce((text, [source, target]) => text.split(source).join(target), value);
+      const translated = entries.reduce((text, [source, target]) => text.split(source).join(target), value);
+      return translateEnumValues(translated);
     }
     for (const [pattern, format] of notificationPatterns) {
       const match = value.match(pattern);
       if (match) return format(...match);
     }
-    return reverseTranslations.get(value) || value;
+    value = translateEnumValues(value);
+    if (reverseTranslations.has(value)) return reverseTranslations.get(value);
+    if (/[À-ỹĐđ]/.test(value)) return value;
+    return reverseEntries.reduce((text, [source, target]) => {
+      const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(source)}(?=$|[^\\p{L}\\p{N}])`, 'giu');
+      return text.replace(pattern, (_, prefix) => `${prefix}${target}`);
+    }, value);
   }
 
   function translateNode(node) {
@@ -884,7 +1019,7 @@
       switcher.querySelectorAll('[data-language]').forEach((button) => {
         const selected = button.dataset.language === language;
         button.setAttribute('aria-pressed', String(selected));
-        button.setAttribute('aria-label', button.dataset.language === 'en' ? 'English' : 'Tiếng Việt');
+        button.setAttribute('aria-label', button.dataset.language === 'en' ? 'English' : language === 'en' ? 'Vietnamese' : 'Tiếng Việt');
       });
       return;
     }
@@ -959,7 +1094,7 @@
         button.className = 'language-option';
         button.dataset.language = code;
         button.textContent = code.toUpperCase();
-        button.setAttribute('aria-label', code === 'en' ? 'English' : 'Tiếng Việt');
+        button.setAttribute('aria-label', code === 'en' ? 'English' : language === 'en' ? 'Vietnamese' : 'Tiếng Việt');
         button.setAttribute('aria-pressed', String(code === language));
         button.addEventListener('click', () => setLanguage(code));
         group.appendChild(button);
