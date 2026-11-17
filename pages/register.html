@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Đăng ký - Vinhomes</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/language-switcher.css">
   <style>
     * {
       margin: 0;
@@ -87,10 +88,11 @@
     }
 
     .register-box {
+      position: relative;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
       border-radius: 20px;
-      padding: 45px;
+      padding: 76px 45px 45px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
       border: 1px solid rgba(255, 255, 255, 0.2);
       animation: slideUp 0.5s ease-out;
@@ -337,7 +339,7 @@
 
     @media (max-width: 600px) {
       .register-box {
-        padding: 30px 20px;
+        padding: 76px 20px 30px;
       }
 
       .form-grid {
@@ -371,6 +373,9 @@
 <body>
   <div class="register-wrapper">
     <div class="register-box">
+      <div class="auth-language-control" role="group" aria-label="Ngôn ngữ">
+        <span class="login-language-icon" aria-hidden="true"><i class="fas fa-globe"></i></span>
+      </div>
       <div class="register-header">
         <div class="logo-icon"><i class="fas fa-building"></i></div>
         <h1>Vinhomes</h1>
