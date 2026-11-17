@@ -68,7 +68,6 @@ func TestClientIPFromAddr(t *testing.T) {
 		})
 	}
 }
-
 func TestVNPayAmountInMinorUnitsRoundsFractionalVND(t *testing.T) {
 	tests := []struct {
 		amount float64
