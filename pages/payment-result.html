@@ -80,20 +80,28 @@
   </div>
 
   <script type="module">
-    import { initLayout } from '../js/modules/layout.js';
     import invoiceAPI from '../js/api/invoices.js';
     import { formatCurrency } from '../js/utils/helpers.js';
 
-    await initLayout();
-
     const params = new URLSearchParams(window.location.search);
     const card = document.getElementById('resultCard');
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[character]);
+    }
 
     async function renderResult() {
       const responseCode = params.get('vnp_ResponseCode');
       const txnRef = params.get('vnp_TxnRef');
       const amountRaw = params.get('vnp_Amount');
       const amount = amountRaw ? parseInt(amountRaw, 10) / 100 : 0;
+      let verificationError = null;
 
       if (!txnRef) {
         card.innerHTML = `
@@ -115,33 +123,34 @@
         txn = res.data;
         verified = res.success === true;
       } catch (err) {
-        console.warn('Backend verify failed, using response code:', err);
+        verificationError = err;
+        console.error('VNPay return verification failed:', err);
       }
 
-      const success = verified || responseCode === '00';
-      const status = txn?.status || (success ? 'success' : 'failed');
-
-      if (status === 'success' || success) {
+      if (verified && txn?.status === 'success') {
         card.innerHTML = `
           <div class="result-icon">✅</div>
           <div class="result-title">Thanh toán thành công</div>
           <div class="result-message">Giao dịch đã được xác nhận. Hóa đơn sẽ được cập nhật trong hệ thống.</div>
           <div class="result-detail">
-            <div><span>Mã giao dịch</span><strong>${txnRef}</strong></div>
+            <div><span>Mã giao dịch</span><strong>${escapeHTML(txnRef)}</strong></div>
             ${amount ? `<div><span>Số tiền</span><strong>${formatCurrency(amount)}</strong></div>` : ''}
-            ${txn?.provider_txn_id ? `<div><span>Mã VNPay</span><strong>${txn.provider_txn_id}</strong></div>` : ''}
+            ${txn?.provider_txn_id ? `<div><span>Mã VNPay</span><strong>${escapeHTML(txn.provider_txn_id)}</strong></div>` : ''}
           </div>
           <div class="result-actions">
             <a class="btn-link btn-primary-link" href="/pages/invoices.html">Xem hóa đơn</a>
             <a class="btn-link btn-secondary-link" href="/pages/resident-dashboard.html">Trang chủ</a>
           </div>`;
       } else {
+        const failureMessage = verificationError
+          ? `Không thể xác minh giao dịch: ${verificationError.message}`
+          : `Giao dịch bị hủy hoặc thất bại (mã: ${responseCode || 'Không xác định'}). Bạn có thể thử lại.`;
         card.innerHTML = `
           <div class="result-icon">❌</div>
-          <div class="result-title">Thanh toán không thành công</div>
-          <div class="result-message">Giao dịch bị hủy hoặc thất bại (mã: ${responseCode || 'Không xác định'}). Bạn có thể thử lại.</div>
+          <div class="result-title">${verificationError ? 'Không thể xác minh thanh toán' : 'Thanh toán không thành công'}</div>
+          <div class="result-message">${escapeHTML(failureMessage)}</div>
           <div class="result-detail">
-            <div><span>Mã giao dịch</span><strong>${txnRef}</strong></div>
+            <div><span>Mã giao dịch</span><strong>${escapeHTML(txnRef)}</strong></div>
           </div>
           <div class="result-actions">
             <a class="btn-link btn-primary-link" href="/pages/invoices.html">Thử lại</a>

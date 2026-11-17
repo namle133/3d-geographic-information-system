@@ -17,13 +17,13 @@ import (
 )
 
 var (
-	ErrInvoiceNotFound      = errors.New("invoice not found")
-	ErrInvoiceNotPayable    = errors.New("invoice is not payable")
-	ErrInvalidAmount        = errors.New("invalid payment amount")
-	ErrPaymentNotFound      = errors.New("payment transaction not found")
-	ErrPaymentAlreadyDone   = errors.New("payment already completed")
-	ErrVNPayNotConfigured   = errors.New("vnpay not configured")
-	ErrInvoiceAccessDenied  = errors.New("access denied to invoice")
+	ErrInvoiceNotFound     = errors.New("invoice not found")
+	ErrInvoiceNotPayable   = errors.New("invoice is not payable")
+	ErrInvalidAmount       = errors.New("invalid payment amount")
+	ErrPaymentNotFound     = errors.New("payment transaction not found")
+	ErrPaymentAlreadyDone  = errors.New("payment already completed")
+	ErrVNPayNotConfigured  = errors.New("vnpay not configured")
+	ErrInvoiceAccessDenied = errors.New("access denied to invoice")
 )
 
 type PaymentService struct {
@@ -204,7 +204,7 @@ func (s *PaymentService) ProcessVNPayIPN(params map[string]string) VNPayIPNResul
 	// Validate amount (VNPay sends amount * 100)
 	var vnpAmount int64
 	fmt.Sscanf(params["vnp_Amount"], "%d", &vnpAmount)
-	expectedAmount := int64(txn.Amount * 100)
+	expectedAmount := vnpayAmountInMinorUnits(txn.Amount)
 	if vnpAmount != expectedAmount {
 		log.Printf("VNPay amount mismatch: got %d want %d for txn %s", vnpAmount, expectedAmount, txnRef)
 		return VNPayIPNResult{RspCode: "04", Message: "Invalid amount"}

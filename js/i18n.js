@@ -705,6 +705,8 @@
     'Xem hóa đơn': 'View invoice',
     'Trang chủ': 'Home',
     'Thanh toán không thành công': 'Payment failed',
+    'Không thể xác minh thanh toán': 'Unable to verify payment',
+    'Không thể xác minh giao dịch:': 'Unable to verify transaction:',
     'Giao dịch bị hủy hoặc thất bại (mã:': 'The transaction was cancelled or failed (code:',
     '). Bạn có thể thử lại.': '). You can try again.',
     'Lưu thay đổi': 'Save changes',
