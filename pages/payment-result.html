@@ -83,81 +83,62 @@
     import invoiceAPI from '../js/api/invoices.js';
     import { formatCurrency } from '../js/utils/helpers.js';
 
-    const params = new URLSearchParams(window.location.search);
     const card = document.getElementById('resultCard');
-
+    const queryString = window.location.search.slice(1);
+    let checking = false;
     function escapeHTML(value) {
-      return String(value).replace(/[&<>"']/g, (character) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;',
-      })[character]);
+      return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
-
+    function showResult(icon, title, message, txn, retry = false) {
+      card.innerHTML = `
+        <div class="result-icon">${icon}</div>
+        <div class="result-title">${escapeHTML(title)}</div>
+        <div class="result-message">${escapeHTML(message)}</div>
+        ${txn ? `<div class="result-detail">
+          <div><span>Mã giao dịch</span><strong>${escapeHTML(txn.id)}</strong></div>
+          <div><span>Số tiền</span><strong>${escapeHTML(formatCurrency(txn.amount))}</strong></div>
+          ${txn.provider_txn_id ? `<div><span>Mã VNPay</span><strong>${escapeHTML(txn.provider_txn_id)}</strong></div>` : ''}
+        </div>` : ''}
+        <div class="result-actions">
+          ${retry ? '<button type="button" class="btn-link btn-secondary-link" id="verifyAgain">Kiểm tra lại</button>' : ''}
+          <a class="btn-link btn-primary-link" href="/pages/invoices.html">Xem hóa đơn</a>
+        </div>`;
+      document.getElementById('verifyAgain')?.addEventListener('click', renderResult);
+    }
     async function renderResult() {
-      const responseCode = params.get('vnp_ResponseCode');
-      const txnRef = params.get('vnp_TxnRef');
-      const amountRaw = params.get('vnp_Amount');
-      const amount = amountRaw ? parseInt(amountRaw, 10) / 100 : 0;
-      let verificationError = null;
-
-      if (!txnRef) {
-        card.innerHTML = `
-          <div class="result-icon">⚠️</div>
-          <div class="result-title">Không tìm thấy giao dịch</div>
-          <div class="result-message">Thiếu thông tin giao dịch từ VNPay.</div>
-          <div class="result-actions">
-            <a class="btn-link btn-primary-link" href="/pages/invoices.html">Quay lại hóa đơn</a>
-          </div>`;
-        return;
-      }
-
-      let txn = null;
-      let verified = false;
-
+      if (checking) return;
+      checking = true;
+      card.setAttribute('aria-busy', 'true');
       try {
-        const queryString = window.location.search.slice(1);
-        const res = await invoiceAPI.verifyVNPayReturn(queryString);
-        txn = res.data;
-        verified = res.success === true;
-      } catch (err) {
-        verificationError = err;
-        console.error('VNPay return verification failed:', err);
-      }
-
-      if (verified && txn?.status === 'success') {
-        card.innerHTML = `
-          <div class="result-icon">✅</div>
-          <div class="result-title">Thanh toán thành công</div>
-          <div class="result-message">Giao dịch đã được xác nhận. Hóa đơn sẽ được cập nhật trong hệ thống.</div>
-          <div class="result-detail">
-            <div><span>Mã giao dịch</span><strong>${escapeHTML(txnRef)}</strong></div>
-            ${amount ? `<div><span>Số tiền</span><strong>${formatCurrency(amount)}</strong></div>` : ''}
-            ${txn?.provider_txn_id ? `<div><span>Mã VNPay</span><strong>${escapeHTML(txn.provider_txn_id)}</strong></div>` : ''}
-          </div>
-          <div class="result-actions">
-            <a class="btn-link btn-primary-link" href="/pages/invoices.html">Xem hóa đơn</a>
-            <a class="btn-link btn-secondary-link" href="/pages/resident-dashboard.html">Trang chủ</a>
-          </div>`;
-      } else {
-        const failureMessage = verificationError
-          ? `Không thể xác minh giao dịch: ${verificationError.message}`
-          : `Giao dịch bị hủy hoặc thất bại (mã: ${responseCode || 'Không xác định'}). Bạn có thể thử lại.`;
-        card.innerHTML = `
-          <div class="result-icon">❌</div>
-          <div class="result-title">${verificationError ? 'Không thể xác minh thanh toán' : 'Thanh toán không thành công'}</div>
-          <div class="result-message">${escapeHTML(failureMessage)}</div>
-          <div class="result-detail">
-            <div><span>Mã giao dịch</span><strong>${escapeHTML(txnRef)}</strong></div>
-          </div>
-          <div class="result-actions">
-            <a class="btn-link btn-primary-link" href="/pages/invoices.html">Thử lại</a>
-          </div>`;
+        if (!new URLSearchParams(queryString).get('vnp_TxnRef')) {
+          showResult('⚠️', 'Không tìm thấy giao dịch', 'Thiếu thông tin giao dịch từ VNPay.');
+          return;
+        }
+        let res;
+        for (let attempt = 0; attempt < 5; attempt++) {
+          res = await invoiceAPI.verifyVNPayReturn(queryString);
+          const txn = res.data;
+          if (res.verified !== true || !txn) throw new Error('Kết quả chưa được xác minh');
+          if (res.success === true && txn.status === 'success') {
+            showResult(txn.requires_review ? '⚠️' : '✅',
+              txn.requires_review ? 'Thanh toán cần đối soát' : 'Thanh toán thành công',
+              txn.requires_review ? 'Đã nhận thanh toán. Vui lòng liên hệ ban quản lý để đối soát khoản thu.' : 'Giao dịch đã được xác nhận và hóa đơn đã được cập nhật.', txn);
+            return;
+          }
+          if (txn.status === 'failed' || res.response_code !== '00' || res.transaction_status !== '00') {
+            showResult('❌', 'Thanh toán không thành công', 'Giao dịch bị hủy hoặc thất bại. Vui lòng kiểm tra hóa đơn trước khi thanh toán lại.', txn);
+            return;
+          }
+          if (attempt < 4) await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        showResult('⏳', 'Đang chờ xác nhận thanh toán', 'Hệ thống chưa nhận được xác nhận từ VNPay. Vui lòng kiểm tra lại; tránh thanh toán lại nếu tài khoản đã bị trừ tiền.', res.data, true);
+      } catch (error) {
+        showResult('⚠️', 'Chưa thể xác minh thanh toán', 'Vui lòng kiểm tra lại kết quả hoặc liên hệ ban quản lý nếu tài khoản đã bị trừ tiền.', null, true);
+      } finally {
+        checking = false;
+        card.setAttribute('aria-busy', 'false');
       }
     }
-
     renderResult();
   </script>
 </body>

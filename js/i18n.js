@@ -1,6 +1,19 @@
 (function () {
   const STORAGE_KEY = 'vinhomes-language';
   const translations = {
+    "Nếu email tồn tại, mã đặt lại mật khẩu sẽ được gửi tới email đã đăng ký.": "If the account exists, a reset code will be sent to its registered email address.",
+    "Khôi phục qua email chưa được cấu hình. Vui lòng liên hệ ban quản lý.": "Password reset email is not configured. Please contact management.",
+    "Mã được gửi trong email": "Code sent by email",
+    "Mã đặt lại mật khẩu sẽ được gửi tới email đã đăng ký.": "A password reset code will be sent to your registered email address.",
+    "Vui lòng kiểm tra lại kết quả hoặc liên hệ ban quản lý nếu tài khoản đã bị trừ tiền.": "Check the result again or contact management if your account has been charged.",
+    "Chưa thể xác minh thanh toán": "Payment could not be verified yet",
+    "Hệ thống chưa nhận được xác nhận từ VNPay. Vui lòng kiểm tra lại; tránh thanh toán lại nếu tài khoản đã bị trừ tiền.": "Confirmation from VNPay has not arrived. Check again and avoid paying again if your account has been charged.",
+    "Đang chờ xác nhận thanh toán": "Awaiting payment confirmation",
+    "Giao dịch bị hủy hoặc thất bại. Vui lòng kiểm tra hóa đơn trước khi thanh toán lại.": "The payment was cancelled or failed. Please check the invoice before paying again.",
+    "Giao dịch đã được xác nhận và hóa đơn đã được cập nhật.": "The payment is confirmed and the invoice has been updated.",
+    "Đã nhận thanh toán. Vui lòng liên hệ ban quản lý để đối soát khoản thu.": "Payment received. Please contact management to reconcile this payment.",
+    "Thanh toán cần đối soát": "Payment needs reconciliation",
+    "Kiểm tra lại": "Check again",
     'BẢNG ĐIỀU KHIỂN GIS / BIM 3D': '3D GIS / BIM CONTROL PANEL',
     '01 CẮT LỚP CHIỀU CAO & THI CÔNG': '01 HEIGHT SECTION & CONSTRUCTION',
     '02 QUẢN LÝ LỚP DỮ LIỆU': '02 DATA LAYER MANAGEMENT',

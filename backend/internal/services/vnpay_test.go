@@ -4,6 +4,8 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/hex"
+	"math"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -81,6 +83,59 @@ func TestVNPayAmountInMinorUnitsRoundsFractionalVND(t *testing.T) {
 	for _, tt := range tests {
 		if got := vnpayAmountInMinorUnits(tt.amount); got != tt.want {
 			t.Errorf("vnpayAmountInMinorUnits(%v) = %d, want %d", tt.amount, got, tt.want)
+		}
+	}
+}
+
+func TestVNPayVerifyCallbackBindsMerchantAndRequiresConfiguration(t *testing.T) {
+	client := &VNPayClient{TmnCode: "AUDIT123", HashSecret: "test-secret"}
+	p := map[string]string{"vnp_TmnCode": "AUDIT123", "vnp_TxnRef": "test", "vnp_Amount": "10000000"}
+	p["vnp_SecureHash"] = client.sign(p)
+	if !client.VerifyCallback(p) {
+		t.Fatal("valid signature rejected")
+	}
+	p["vnp_Amount"] = "20000000"
+	if client.VerifyCallback(p) {
+		t.Fatal("tampered amount accepted")
+	}
+	delete(p, "vnp_SecureHash")
+	p["vnp_TmnCode"] = "OTHER123"
+	p["vnp_SecureHash"] = client.sign(p)
+	if client.VerifyCallback(p) {
+		t.Fatal("another merchant accepted")
+	}
+	empty := &VNPayClient{}
+	p = map[string]string{"vnp_TmnCode": ""}
+	p["vnp_SecureHash"] = empty.sign(p)
+	if empty.VerifyCallback(p) {
+		t.Fatal("unconfigured client accepted callback")
+	}
+}
+
+func TestVNPayBuildURLAndAmountValidation(t *testing.T) {
+	client := &VNPayClient{TmnCode: "AUDIT123", HashSecret: "test-secret", PayURL: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html", ReturnURL: "https://example.com/result"}
+	link, err := client.BuildPaymentURL("ref", "Thanh toan don hang", "203.0.113.10", 10000.29)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsed, err := url.Parse(link)
+	if err != nil {
+		t.Fatal(err)
+	}
+	q := parsed.Query()
+	if q.Get("vnp_Amount") != "1000029" || q.Get("vnp_IpAddr") != "203.0.113.10" || q.Get("vnp_Version") != "2.1.0" {
+		t.Fatal("invalid payment parameters")
+	}
+	p := map[string]string{}
+	for k, values := range q {
+		p[k] = values[0]
+	}
+	if !client.VerifyCallback(p) {
+		t.Fatal("URL signature did not verify")
+	}
+	for _, amount := range []float64{0, -1, 4999, math.NaN(), math.Inf(1), 10000000000} {
+		if _, err := client.BuildPaymentURL("ref", "info", "203.0.113.10", amount); err == nil {
+			t.Fatalf("accepted invalid amount %v", amount)
 		}
 	}
 }
