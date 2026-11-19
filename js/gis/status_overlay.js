@@ -3,7 +3,7 @@
  * Tô màu căn hộ theo trạng thái từ backend API
  */
 (function () {
-  const API_BASE = 'http://localhost:8080/api/v1';
+  const API_BASE = window.__API_BASE_URL || 'http://localhost:8080/api/v1';
 
   const STATUS_COLORS = {
     empty: [76, 175, 80, 0.92],       // Xanh lá — Trống

@@ -4,6 +4,7 @@
 // =====================================================================
 
 require([
+    "esri/intl",
     "esri/Map",
     "esri/Basemap",
     "esri/views/SceneView",
@@ -19,9 +20,11 @@ require([
     "esri/widgets/Home",
     "esri/widgets/Fullscreen"
 ], function (
-    Map, Basemap, SceneView, Graphic, GraphicsLayer, Point, Mesh, WebStyleSymbol,
+    intl, Map, Basemap, SceneView, Graphic, GraphicsLayer, Point, Mesh, WebStyleSymbol,
     Compass, ScaleBar, Expand, BasemapGallery, Home, Fullscreen
 ) {
+    intl.setLocale(document.documentElement.lang || "vi");
+    window.addEventListener("site:languagechange", e => intl.setLocale(e.detail.language));
     const data = window.SITE_DATA;
     const SITE_LNG = 105.78548;
     const SITE_LAT = 21.01148 ;
