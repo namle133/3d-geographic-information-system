@@ -21,3 +21,10 @@ test('all pages load localization and the 3D selector has a dedicated visible ho
  for(const path of ['index.html',...fs.readdirSync(new URL('../pages/',import.meta.url)).filter(p=>p.endsWith('.html')).map(p=>'pages/'+p)]) assert.match(fs.readFileSync(new URL('../'+path,import.meta.url),'utf8'),/js\/i18n\.js/);
  assert.match(fs.readFileSync(new URL('../index.html',import.meta.url),'utf8'),/gis-language-control/);
 });
+test('Vietnamese backend response messages translate completely into English',()=>{
+ const t=translator('en');
+ for(const dir of ['handlers','services']) for(const file of fs.readdirSync(new URL('../backend/internal/'+dir+'/',import.meta.url)).filter(f=>f.endsWith('.go')&&!f.endsWith('_test.go'))){
+  const source=fs.readFileSync(new URL('../backend/internal/'+dir+'/'+file,import.meta.url),'utf8');
+  for(const [,text] of source.matchAll(/"(?:error|message|title)"\s*:\s*"([^"\n]+)"/g)) if(/[À-ỹĐđ]/.test(text)) assert.doesNotMatch(t.translate(text),/[À-ỹĐđ]/,file+': '+text);
+ }
+});
