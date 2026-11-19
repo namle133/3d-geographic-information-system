@@ -141,6 +141,15 @@ func main() {
 		protected.PUT("/notifications/read-all", handlers.MarkAllNotificationsAsRead)
 		protected.DELETE("/notifications/:id", handlers.DeleteNotification)
 
+		// Private resident/admin messaging
+		protected.GET("/chat/unread", handlers.ChatUnread)
+		protected.GET("/chat/people", middleware.RequireRole("admin"), handlers.ChatPeople)
+		protected.POST("/chat/conversations", handlers.StartChat)
+		protected.GET("/chat/conversations/:id/messages", handlers.ChatMessages)
+		protected.POST("/chat/conversations/:id/messages", handlers.SendChatMessage)
+		protected.PUT("/chat/conversations/:id/read", handlers.ReadChat)
+		protected.PUT("/chat/conversations/:id/status", middleware.RequireRole("admin"), handlers.ChatStatus)
+
 		// ========== Dashboard & Reports ==========
 		protected.GET("/dashboard/kpis", handlers.GetDashboardKPIs)
 		protected.GET("/audit-logs", middleware.RequireRole("admin"), handlers.GetAuditLogs)

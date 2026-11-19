@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Trò chuyện - Vinhomes</title>
+    <link rel="stylesheet" href="../css/admin.css" />
+    <link rel="stylesheet" href="../css/chat.css" />
+    <script src="../js/env-config.js"></script>
+    <script src="../js/i18n.js" defer></script>
+  </head>
+  <body class="chat-shell">
+    <div id="navbar-placeholder"></div>
+    <main class="container chat-page">
+      <header class="chat-hero">
+        <div>
+          <span class="chat-eyebrow">VINHOMES CONNECT</span>
+          <h1 id="chatPageTitle">Trò chuyện với quản trị viên</h1>
+          <p id="chatSubtitle">
+            Một nơi để hỏi, chia sẻ và nhận hỗ trợ từ ban quản trị.
+          </p>
+        </div>
+        <span class="chat-hero-icon" aria-hidden="true">✦</span>
+      </header>
+      <button type="button" id="chatRetry" class="btn btn-outline" hidden>
+        Thử lại
+      </button>
+      <div id="chatError" class="chat-error" role="alert" hidden></div>
+      <div class="chat-workspace" id="chatWorkspace">
+        <aside
+          class="chat-directory"
+          id="chatDirectory"
+          aria-label="Danh sách cuộc trò chuyện"
+          hidden
+        >
+          <div class="chat-directory-heading">
+            <h2>Hộp thư</h2>
+            <span id="chatTotal" class="chat-total">0</span>
+          </div>
+          <label class="chat-search"
+            ><span class="chat-sr">Tìm người dùng</span
+            ><input
+              id="chatSearch"
+              type="search"
+              placeholder="Tìm tên hoặc email..."
+          /></label>
+          <div
+            class="chat-filters"
+            role="group"
+            aria-label="Lọc cuộc trò chuyện"
+          >
+            <button type="button" data-filter="all" aria-pressed="true">
+              Tất cả</button
+            ><button type="button" data-filter="unread" aria-pressed="false">
+              Chưa đọc</button
+            ><button type="button" data-filter="open" aria-pressed="false">
+              Đang mở</button
+            ><button type="button" data-filter="resolved" aria-pressed="false">
+              Đã giải quyết
+            </button>
+          </div>
+          <div id="chatPeople" class="chat-people">
+            <p class="chat-empty">Đang tải...</p>
+          </div>
+        </aside>
+        <section class="chat-thread" aria-label="Nội dung trò chuyện">
+          <div id="chatWelcome" class="chat-welcome">
+            <span aria-hidden="true">◌</span>
+            <h2>Chọn một cuộc trò chuyện</h2>
+            <p>Mọi tin nhắn và người dùng trong một không gian.</p>
+          </div>
+          <div id="chatActive" class="chat-active" hidden>
+            <header class="chat-thread-heading">
+              <div class="chat-avatar" id="chatAvatar" aria-hidden="true">
+                V
+              </div>
+              <div class="chat-thread-person">
+                <h2 id="chatName" data-no-translate>Vinhomes</h2>
+                <p id="chatPersonInfo"></p>
+              </div>
+              <button
+                type="button"
+                id="chatStatus"
+                class="btn btn-outline"
+                hidden
+              >
+                Đánh dấu đã giải quyết
+              </button>
+            </header>
+            <div
+              class="chat-history"
+              id="chatHistory"
+              tabindex="0"
+              aria-label="Lịch sử tin nhắn"
+            >
+              <button
+                type="button"
+                id="chatOlder"
+                class="chat-load-older"
+                hidden
+              >
+                Tải tin nhắn cũ hơn
+              </button>
+              <div id="chatMessages"></div>
+            </div>
+            <div
+              id="chatAnnouncement"
+              class="chat-sr"
+              role="status"
+              aria-live="polite"
+            ></div>
+            <form id="chatForm" class="chat-composer">
+              <label for="chatDraft" class="chat-sr">Tin nhắn của bạn</label
+              ><textarea
+                id="chatDraft"
+                rows="2"
+                maxlength="2000"
+                placeholder="Viết tin nhắn của bạn..."
+                required
+              ></textarea>
+              <div class="chat-composer-bottom">
+                <span id="chatDraftCount">0 / 2000</span
+                ><button type="submit" id="chatSend">
+                  Gửi tin nhắn <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </form>
+            <p class="chat-help" id="chatHelp">
+              Tin nhắn được lưu lại. Phản hồi của quản trị viên sẽ xuất hiện tại
+              đây.
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="../js/modules/chat.js"></script>
+  </body>
+</html>

@@ -336,3 +336,26 @@ type Staff struct {
 
 	User User `gorm:"foreignKey:UserID" json:"-"`
 }
+
+// Chat threads are private between one user and the administrator team.
+type ChatConversation struct {
+	ID            string     `gorm:"primaryKey" json:"id"`
+	UserID        string     `gorm:"uniqueIndex" json:"user_id"`
+	Status        string     `json:"status"`
+	LastMessageAt *time.Time `gorm:"index" json:"last_message_at"`
+	UserReadAt    *time.Time `json:"-"`
+	AdminReadAt   *time.Time `json:"-"`
+	CreatedAt     time.Time  `json:"created_at"`
+	User          User       `gorm:"foreignKey:UserID" json:"-"`
+}
+type ChatMessage struct {
+	ID             string           `gorm:"primaryKey" json:"id"`
+	ConversationID string           `gorm:"index:idx_chat_order,priority:1" json:"conversation_id"`
+	SenderID       string           `gorm:"index" json:"sender_id"`
+	ClientID       string           `gorm:"uniqueIndex" json:"client_id"`
+	FromAdmin      bool             `json:"from_admin"`
+	Body           string           `json:"body"`
+	CreatedAt      time.Time        `gorm:"index:idx_chat_order,priority:2" json:"created_at"`
+	Conversation   ChatConversation `gorm:"foreignKey:ConversationID" json:"-"`
+	Sender         User             `gorm:"foreignKey:SenderID" json:"-"`
+}

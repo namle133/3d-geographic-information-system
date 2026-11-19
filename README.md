@@ -24,6 +24,18 @@
 An academic **3D Geographic Information Systems** project combining an interactive model of **Vinhomes West Point, Hanoi** with a property management portal. The scene represents towers **W1, W2, W3**, the podium, roads, landscaping and rooftop amenities.
 
 
+## 🔑 Try the resident portal
+
+Explore the [live website](https://3d-geographic-information-system.vercel.app/pages/login.html) with the shared demo account:
+
+| Email | Password |
+|---|---|
+| `resident@vinhomes.com` | `resident123` |
+
+This account is for exploring the demo. Please avoid entering personal or confidential information in the shared account.
+
+Use **Chat with admin** in the resident portal to ask questions or share feedback. Administrators have a dedicated inbox with user search, unread counts, conversation history and open/resolved filters. Messages are saved and refresh automatically. Both interfaces support English and Vietnamese.
+
 ## 🧭 Features
 
 | Feature | Description |

@@ -28,3 +28,10 @@ test('Vietnamese backend response messages translate completely into English',()
   for(const [,text] of source.matchAll(/"(?:error|message|title)"\s*:\s*"([^"\n]+)"/g)) if(/[À-ỹĐđ]/.test(text)) assert.doesNotMatch(t.translate(text),/[À-ỹĐđ]/,file+': '+text);
  }
 });
+
+test('wrapped chat labels translate while message content stays outside translation',()=>{
+ const t=translator('en');
+ assert.equal(t.translate('Tin nhắn được lưu lại. Phản hồi của quản trị viên sẽ xuất hiện tại\n   đây.'),'Your messages are saved. Replies from your administrator will appear here.');
+ const module=fs.readFileSync(new URL('../js/modules/chat.js',import.meta.url),'utf8');
+ assert.match(module,/chat-message-body.*data-no-translate/);
+});
