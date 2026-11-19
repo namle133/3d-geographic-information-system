@@ -5,43 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thông báo - Vinhomes</title>
   <link rel="stylesheet" href="../css/admin.css" />
-  <style>
-    .notif-item {
-      padding: 14px 16px;
-      border-bottom: 1px solid #f0f0f0;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      transition: background 0.2s;
-    }
-    .notif-item:hover { background: #fafbff; }
-    .notif-item.unread { background: #f8f9ff; border-left: 3px solid #667eea; }
-    .notif-type {
-      display: inline-block;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 10px;
-      background: #eef0ff;
-      color: #667eea;
-      margin-bottom: 4px;
-    }
-    .notif-meta { font-size: 11px; color: #999; margin-top: 6px; }
-    .kpi-inline {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-    .kpi-inline .pill {
-      background: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }
-    #recipientGroup { display: none; }
-  </style>
+  <link rel="stylesheet" href="../css/notifications.css" />
   <!-- Runtime environment config -->
   <script src="../js/env-config.js"></script>
   <script src="../js/i18n.js" defer></script>
@@ -49,10 +13,10 @@
 <body>
   <div id="navbar-placeholder"></div>
   <div class="container">
-    <div class="page-header">
+    <div class="page-header notification-header">
       <div>
         <h1 class="page-title">Thông báo</h1>
-        <p class="page-subtitle">UC 2.7.45 — Quản lý thông báo hệ thống</p>
+        <p class="page-subtitle">Cập nhật mới nhất về căn hộ và dịch vụ của bạn</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-outline" id="markAllReadBtn">Đánh dấu tất cả đã đọc</button>
@@ -68,10 +32,23 @@
       <button class="tab-btn" data-tab="system" id="systemTab" style="display:none">Hệ thống (Admin)</button>
     </div>
 
-    <div class="section" id="notifList">
+    <div class="notification-toolbar">
+      <label class="notification-search"><span aria-hidden="true">⌕</span><span class="sr-only">Tìm thông báo</span><input id="notificationSearch" type="search" placeholder="Tìm theo tiêu đề hoặc nội dung..." /></label>
+      <label class="notification-category"><span class="sr-only">Loại thông báo</span><select id="notificationCategory"><option value="">Tất cả loại thông báo</option><option value="general">Thông báo chung</option><option value="contract">Hợp đồng</option><option value="invoice">Hóa đơn</option><option value="maintenance">Bảo trì</option><option value="payment">Thanh toán</option></select></label>
+      <span id="notificationResultCount" aria-live="polite"></span>
+    </div>
+    <div class="section notification-list" id="notifList" aria-busy="true">
       <div class="loading"><div class="spinner"></div><p>Đang tải...</p></div>
     </div>
   </div>
+
+  <dialog id="notificationDetail" aria-labelledby="notificationDetailTitle" aria-describedby="notificationDetailMessage">
+    <div class="notification-detail-top"><span id="notificationDetailType" class="notif-type"></span><button type="button" id="closeNotificationDetail" class="detail-close" aria-label="Đóng thông báo">×</button></div>
+    <h2 id="notificationDetailTitle" data-no-translate tabindex="-1"></h2>
+    <p id="notificationDetailDate" class="notif-meta"></p>
+    <div id="notificationDetailMessage" data-no-translate></div>
+    <div class="notification-detail-footer"><span id="notificationDetailStatus"></span><button type="button" id="doneNotificationDetail" class="btn btn-primary">Đóng</button></div>
+  </dialog>
 
   <div class="modal" id="composeModal">
     <div class="modal-content">
@@ -129,7 +106,7 @@
     import usersAPI from '../js/api/users.js';
     import { formatDate, showToast } from '../js/utils/helpers.js';
 
-    await initLayout();
+    if (!await initLayout()) throw new Error("Authentication required");
     const role = authManager.getUserRole();
     const canCompose = ['admin', 'manager'].includes(role);
     const canViewSystem = role === 'admin' || role === 'manager';
@@ -144,6 +121,7 @@
     let allNotifications = [];
     let unreadCount = 0;
     let currentTab = 'all';
+    let loadVersion = 0;
 
     const TYPE_LABELS = {
       general: 'Thông báo chung',
@@ -170,12 +148,17 @@
 
     async function loadNotifications() {
       const el = document.getElementById('notifList');
+      const version = ++loadVersion;
+      el.setAttribute('aria-busy', 'true');
       try {
         const scope = currentTab === 'system' ? 'all' : undefined;
         const res = await notificationAPI.getUserNotifications(scope);
+        if (version !== loadVersion) return;
         const parsed = parseList(res);
         allNotifications = parsed.list;
-        unreadCount = parsed.unread;
+        unreadCount = currentTab === 'system' ? parsed.list.filter(n => !n.is_read).length : parsed.unread;
+        document.getElementById('markAllReadBtn').hidden = currentTab === 'system';
+        document.getElementById('markAllReadBtn').disabled = unreadCount === 0;
 
         document.getElementById('notifKpi').style.display = 'flex';
         document.getElementById('notifKpi').innerHTML = `
@@ -186,8 +169,10 @@
         renderList();
         window.dispatchEvent(new CustomEvent('notificationsUpdated'));
       } catch (err) {
-        el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>${err.message}</p></div>`;
-      }
+        if (version !== loadVersion) return;
+        el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>${escapeHTML(err.message)}</p><button class="btn btn-outline" id="retryNotifications">Thử lại</button></div>`;
+        document.getElementById('retryNotifications').addEventListener('click', loadNotifications);
+      } finally { if (version === loadVersion) el.setAttribute('aria-busy', 'false'); }
     }
 
     function renderList() {
@@ -196,29 +181,38 @@
         list = list.filter((n) => !n.is_read);
       }
 
+      const search = document.getElementById('notificationSearch').value.trim().toLocaleLowerCase();
+      const category = document.getElementById('notificationCategory').value;
+      list = list.filter(n => (!search || `${n.title} ${n.message}`.toLocaleLowerCase().includes(search)) && (!category || n.type?.includes(category)));
+      document.getElementById('notificationResultCount').textContent = `${list.length} thông báo`;
       const el = document.getElementById('notifList');
       if (!list.length) {
-        el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔔</div><p>Không có thông báo</p></div>`;
+        el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔔</div><p>${search || category ? 'Không có thông báo phù hợp' : 'Không có thông báo'}</p>${search || category ? '<button class="btn btn-outline" id="clearNotificationFilters">Xóa bộ lọc</button>' : ''}</div>`;
+        document.getElementById('clearNotificationFilters')?.addEventListener('click', () => {
+          document.getElementById('notificationSearch').value = '';
+          document.getElementById('notificationCategory').value = '';
+          renderList();
+        });
         return;
       }
 
       el.innerHTML = list.map((n) => `
-        <div class="notif-item ${n.is_read ? '' : 'unread'}">
-          <div style="flex:1">
-            <span class="notif-type">${typeLabel(n.type)}</span>
-            <div style="font-weight:${n.is_read ? '500' : '700'};margin-bottom:4px">${n.title}</div>
-            <div style="font-size:13px;color:#555;line-height:1.5">${n.message}</div>
-            <div class="notif-meta">
-              ${formatDate(n.created_at, 'dd/mm/yyyy hh:mm')}
-              ${n.username && currentTab === 'system' ? ` · Gửi tới: ${n.username}` : ''}
-            </div>
+        <article class="notif-item ${n.is_read ? '' : 'unread'}">
+          <div class="notification-icon" aria-hidden="true">${notificationIcon(n.type)}</div>
+          <button type="button" class="notification-open" data-id="${escapeHTML(n.id)}" aria-haspopup="dialog">
+            <span class="notification-card-meta"><span class="notif-type">${escapeHTML(typeLabel(n.type))}</span>${!n.is_read ? '<span class="notification-unread-label">Chưa đọc</span>' : ''}</span>
+            <strong class="notification-title" data-no-translate>${escapeHTML(n.title)}</strong>
+            <span class="notification-preview" data-no-translate>${escapeHTML(n.message)}</span>
+            <span class="notif-meta">${escapeHTML(formatDate(n.created_at, 'dd/mm/yyyy hh:mm'))}${n.username && currentTab === 'system' ? ` · ${escapeHTML(n.username)}` : ''}</span>
+            <span class="notification-expand-hint">Xem chi tiết <span aria-hidden="true">↗</span></span>
+          </button>
+          <div class="notification-actions">
+            ${!n.is_read && currentTab !== 'system' ? `<button class="btn btn-sm btn-outline mark-read" data-id="${escapeHTML(n.id)}">Đã đọc</button>` : ''}
+            ${currentTab !== 'system' ? `<button class="btn btn-sm btn-danger delete-notif" data-id="${escapeHTML(n.id)}">Xóa</button>` : ''}
           </div>
-          <div style="display:flex;gap:6px;flex-shrink:0">
-            ${!n.is_read && currentTab !== 'system' ? `<button class="btn btn-sm btn-outline mark-read" data-id="${n.id}">Đã đọc</button>` : ''}
-            ${currentTab !== 'system' ? `<button class="btn btn-sm btn-danger delete-notif" data-id="${n.id}">Xóa</button>` : ''}
-          </div>
-        </div>
+        </article>
       `).join('');
+      el.querySelectorAll('.notification-open').forEach(button => button.addEventListener('click', () => openNotification(button.dataset.id)));
 
       el.querySelectorAll('.mark-read').forEach((btn) => {
         btn.addEventListener('click', async () => {
@@ -244,6 +238,52 @@
         });
       });
     }
+
+    function escapeHTML(value) {
+      return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function notificationIcon(type = '') {
+      if (type.includes('contract')) return '▤';
+      if (type.includes('invoice')) return '▥';
+      if (type.includes('maintenance') || type.includes('equipment')) return '⚒';
+      if (type.includes('payment')) return '✓';
+      return '◉';
+    }
+    const detail = document.getElementById('notificationDetail');
+    let openedNotificationId = null;
+    async function openNotification(id) {
+      const n = allNotifications.find(n => n.id === id);
+      if (!n) return;
+      openedNotificationId = id;
+      document.getElementById('notificationDetailTitle').textContent = n.title;
+      document.getElementById('notificationDetailMessage').textContent = n.message;
+      document.getElementById('notificationDetailType').textContent = typeLabel(n.type);
+      document.getElementById('notificationDetailDate').textContent = formatDate(n.created_at, 'dd/mm/yyyy hh:mm');
+      document.getElementById('notificationDetailStatus').textContent = n.is_read ? 'Đã đọc' : 'Chưa đọc';
+      if (!detail.open) detail.showModal();
+      document.getElementById('notificationDetailTitle').focus();
+      if (!n.is_read && currentTab !== 'system') {
+        try {
+          await notificationAPI.markNotificationAsRead(id);
+          n.is_read = true;
+          if (openedNotificationId === id) document.getElementById('notificationDetailStatus').textContent = 'Đã đọc';
+          await loadNotifications();
+        } catch (error) { showToast(error.message, 'error'); }
+      }
+    }
+    document.getElementById('closeNotificationDetail').addEventListener('click', () => detail.close());
+    document.getElementById('doneNotificationDetail').addEventListener('click', () => detail.close());
+    detail.addEventListener('click', event => {
+      const rect = detail.getBoundingClientRect();
+      if (event.target === detail && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) detail.close();
+    });
+    detail.addEventListener('close', () => {
+      const trigger = [...document.querySelectorAll('.notification-open')].find(button => button.dataset.id === openedNotificationId);
+      (trigger || document.getElementById('notificationSearch')).focus();
+      openedNotificationId = null;
+    });
+    document.getElementById('notificationSearch').addEventListener('input', renderList);
+    document.getElementById('notificationCategory').addEventListener('change', renderList);
 
     document.querySelectorAll('.tab-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
