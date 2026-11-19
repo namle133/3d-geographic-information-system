@@ -23,6 +23,12 @@ type VNPayClient struct {
 	IPNURL     string
 }
 
+const vnPayPaymentTTL = 15 * time.Minute
+
+func validPaymentAmount(amount float64) bool {
+	return !math.IsNaN(amount) && !math.IsInf(amount, 0) && amount > 0 && amount*100 <= 999999999999
+}
+
 func NewVNPayClient(cfg *config.Config) *VNPayClient {
 	if cfg == nil {
 		return &VNPayClient{
@@ -84,15 +90,19 @@ func copyVNPayParams(src map[string]string) map[string]string {
 }
 
 func (v *VNPayClient) VerifyCallback(params map[string]string) bool {
+	if !v.Configured() || params["vnp_TmnCode"] != v.TmnCode {
+		return false
+	}
 	receivedHash, ok := params["vnp_SecureHash"]
-	if !ok {
+	if !ok || len(receivedHash) != sha512.Size*2 {
 		return false
 	}
 	verifyParams := copyVNPayParams(params)
 	delete(verifyParams, "vnp_SecureHash")
 	delete(verifyParams, "vnp_SecureHashType")
-	expected := v.sign(verifyParams)
-	return hmac.Equal([]byte(expected), []byte(receivedHash))
+	expected, _ := hex.DecodeString(v.sign(verifyParams))
+	received, err := hex.DecodeString(receivedHash)
+	return err == nil && hmac.Equal(expected, received)
 }
 
 func (v *VNPayClient) BuildPaymentURL(txnRef, orderInfo, clientIP string, amountVND float64) (string, error) {
@@ -105,10 +115,18 @@ func (v *VNPayClient) BuildPaymentURL(txnRef, orderInfo, clientIP string, amount
 		loc = time.FixedZone("ICT", 7*3600)
 	}
 	now := time.Now().In(loc)
-	expire := now.Add(15 * time.Minute)
+	expire := now.Add(vnPayPaymentTTL)
+	payURL, err := url.Parse(v.PayURL)
+	if err != nil || payURL.Host == "" || payURL.Scheme != "https" || payURL.RawQuery != "" {
+		return "", fmt.Errorf("URL cổng thanh toán VNPay không hợp lệ")
+	}
+	returnURL, err := url.Parse(v.ReturnURL)
+	if err != nil || returnURL.Host == "" || (returnURL.Scheme != "https" && returnURL.Scheme != "http") {
+		return "", fmt.Errorf("URL nhận kết quả VNPay không hợp lệ")
+	}
 
 	amountInt := vnpayAmountInMinorUnits(amountVND)
-	if amountInt <= 0 {
+	if !validPaymentAmount(amountVND) || amountInt < 500000 {
 		return "", fmt.Errorf("số tiền thanh toán không hợp lệ")
 	}
 

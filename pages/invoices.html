@@ -1575,7 +1575,10 @@
       }
     }
 
+    const initiatingPayments = new Set();
     async function payWithVNPay(invoiceId) {
+      if (initiatingPayments.has(invoiceId)) return;
+      initiatingPayments.add(invoiceId);
       try {
         showToast('Đang chuyển đến VNPay...', 'info');
         const res = await invoiceAPI.initiateVNPay(invoiceId);
@@ -1588,6 +1591,8 @@
       } catch (error) {
         console.error('VNPay error:', error);
         showToast(error.message || 'Không thể khởi tạo thanh toán VNPay', 'error');
+      } finally {
+        initiatingPayments.delete(invoiceId);
       }
     }
 

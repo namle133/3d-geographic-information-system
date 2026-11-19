@@ -32,23 +32,23 @@ type UpdateInvoiceRequest struct {
 }
 
 type InvoiceDetailResponse struct {
-	ID                string             `json:"id"`
-	InvoiceCode       string             `json:"invoice_code"`
-	InvoiceNumber     string             `json:"invoice_number"`
-	ContractID        string             `json:"contract_id"`
-	ApartmentID       string             `json:"apartment_id"`
-	ResidentID        string             `json:"resident_id"`
-	ResidentName      string             `json:"resident_name"`
-	ApartmentCode     string             `json:"apartment_code"`
-	BillingPeriod     string             `json:"billing_period"`
-	DueDate           time.Time          `json:"due_date"`
-	TotalAmount       float64            `json:"total_amount"`
-	PaidAmount        float64            `json:"paid_amount"`
-	OutstandingAmount float64            `json:"outstanding_amount"`
-	Status            string             `json:"status"`
-	Description       string             `json:"description"`
-	LineItems         []InvoiceLineItem  `json:"line_items"`
-	CreatedAt         time.Time          `json:"created_at"`
+	ID                string                  `json:"id"`
+	InvoiceCode       string                  `json:"invoice_code"`
+	InvoiceNumber     string                  `json:"invoice_number"`
+	ContractID        string                  `json:"contract_id"`
+	ApartmentID       string                  `json:"apartment_id"`
+	ResidentID        string                  `json:"resident_id"`
+	ResidentName      string                  `json:"resident_name"`
+	ApartmentCode     string                  `json:"apartment_code"`
+	BillingPeriod     string                  `json:"billing_period"`
+	DueDate           time.Time               `json:"due_date"`
+	TotalAmount       float64                 `json:"total_amount"`
+	PaidAmount        float64                 `json:"paid_amount"`
+	OutstandingAmount float64                 `json:"outstanding_amount"`
+	Status            string                  `json:"status"`
+	Description       string                  `json:"description"`
+	LineItems         []InvoiceLineItem       `json:"line_items"`
+	CreatedAt         time.Time               `json:"created_at"`
 	Payments          []models.InvoicePayment `json:"payments,omitempty"`
 }
 
@@ -275,10 +275,10 @@ func GetInvoices(c *gin.Context) {
 		InvoiceNumber   string    `json:"invoice_number"`
 		ContractID      string    `json:"contract_id"`
 		ApartmentID     string    `json:"apartment_id"`
-		ResidentID        string    `json:"resident_id"`
-		ResidentName      string    `json:"resident_name"`
-		ApartmentNumber   string    `json:"apartment_number"`
-		ApartmentCode     string    `json:"apartment_code"`
+		ResidentID      string    `json:"resident_id"`
+		ResidentName    string    `json:"resident_name"`
+		ApartmentNumber string    `json:"apartment_number"`
+		ApartmentCode   string    `json:"apartment_code"`
 		BillingPeriod   string    `json:"billing_period"`
 		TotalAmount     float64   `json:"total_amount"`
 		PaidAmount      float64   `json:"paid_amount"`
@@ -477,6 +477,8 @@ func RecordPayment(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Số tiền thanh toán không hợp lệ"})
 		case services.ErrInvoiceNotPayable:
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Hóa đơn không thể thanh toán"})
+		case services.ErrPaymentInProgress:
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to record payment"})
 		}
@@ -513,17 +515,17 @@ func GetOverdueInvoices(c *gin.Context) {
 	}
 
 	type InvoiceResponse struct {
-		ID                 string    `json:"id"`
-		InvoiceCode        string    `json:"invoice_code"`
-		ApartmentCode      string    `json:"apartment_code"`
-		ResidentName       string    `json:"resident_name"`
-		BillingPeriod      string    `json:"billing_period"`
-		TotalAmount        float64   `json:"total_amount"`
-		PaidAmount         float64   `json:"paid_amount"`
-		OutstandingAmount  float64   `json:"outstanding_amount"`
-		DueDate            time.Time `json:"due_date"`
-		Status             string    `json:"status"`
-		DaysOverdue        int       `json:"days_overdue"`
+		ID                string    `json:"id"`
+		InvoiceCode       string    `json:"invoice_code"`
+		ApartmentCode     string    `json:"apartment_code"`
+		ResidentName      string    `json:"resident_name"`
+		BillingPeriod     string    `json:"billing_period"`
+		TotalAmount       float64   `json:"total_amount"`
+		PaidAmount        float64   `json:"paid_amount"`
+		OutstandingAmount float64   `json:"outstanding_amount"`
+		DueDate           time.Time `json:"due_date"`
+		Status            string    `json:"status"`
+		DaysOverdue       int       `json:"days_overdue"`
 	}
 
 	response := make([]InvoiceResponse, 0, len(invoices))

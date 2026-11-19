@@ -5,12 +5,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/uit/vinhomes-management/config"
+	"github.com/uit/vinhomes-management/internal/models"
 	"github.com/uit/vinhomes-management/internal/services"
 )
 
 func queryParamsToMap(c *gin.Context) map[string]string {
 	m := make(map[string]string)
 	for k, values := range c.Request.URL.Query() {
+		if len(values) != 1 {
+			return nil
+		}
 		if len(values) > 0 {
 			m[k] = values[0]
 		}
@@ -40,6 +44,8 @@ func InitiateVNPayPayment(cfg *config.Config) gin.HandlerFunc {
 				status = http.StatusForbidden
 			case services.ErrVNPayNotConfigured:
 				status = http.StatusServiceUnavailable
+			case services.ErrPaymentInProgress:
+				status = http.StatusConflict
 			}
 			c.JSON(status, gin.H{"error": err.Error(), "success": false})
 			return
@@ -86,10 +92,12 @@ func VNPayReturnCallback(cfg *config.Config) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"data":            txn,
-			"success":         txn.Status == "success",
-			"response_code":   params["vnp_ResponseCode"],
-			"transaction_ref": params["vnp_TxnRef"],
+			"data":               paymentSummary(txn),
+			"success":            txn.Status == "success",
+			"verified":           true,
+			"response_code":      params["vnp_ResponseCode"],
+			"transaction_status": params["vnp_TransactionStatus"],
+			"transaction_ref":    params["vnp_TxnRef"],
 		})
 	}
 }
@@ -101,4 +109,9 @@ func VNPayIPNCallback(cfg *config.Config) gin.HandlerFunc {
 		result := svc.ProcessVNPayIPN(params)
 		c.JSON(http.StatusOK, result)
 	}
+}
+
+// Return callbacks are public; expose only the verified transaction summary.
+func paymentSummary(txn *models.PaymentTransaction) gin.H {
+	return gin.H{"id": txn.ID, "invoice_id": txn.InvoiceID, "amount": txn.Amount, "status": txn.Status, "provider_txn_id": txn.ProviderTxnID, "requires_review": txn.RequiresReview}
 }

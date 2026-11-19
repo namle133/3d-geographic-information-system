@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
+	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -12,7 +15,9 @@ import (
 	"github.com/uit/vinhomes-management/internal/database"
 	"github.com/uit/vinhomes-management/internal/middleware"
 	"github.com/uit/vinhomes-management/internal/models"
+	"github.com/uit/vinhomes-management/internal/services"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type LoginRequest struct {
@@ -35,7 +40,7 @@ type RegisterRequest struct {
 	Username         string `json:"username" binding:"required"`
 	Email            string `json:"email" binding:"required,email"`
 	Password         string `json:"password" binding:"required,min=8"`
-	Role             string `json:"role" binding:"required,oneof=admin manager staff resident"`
+	Role             string `json:"role" binding:"omitempty,oneof=resident"`
 	FullName         string `json:"full_name"`
 	IDCard           string `json:"id_card"`
 	DateOfBirth      string `json:"date_of_birth"`
@@ -111,6 +116,10 @@ func Register(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	if req.Role == "" {
+		req.Role = "resident"
 	}
 
 	// For resident role, validate required fields
@@ -232,71 +241,87 @@ func Register(c *gin.Context) {
 	})
 }
 
-// ForgotPassword — UC 2.7.4: tạo mã reset (demo: trả về token trong response)
-func ForgotPassword(c *gin.Context) {
-	var req ForgotPasswordRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	var user models.User
-	if err := database.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
-		// Không tiết lộ email có tồn tại hay không
-		c.JSON(http.StatusOK, gin.H{"message": "Nếu email tồn tại, mã đặt lại mật khẩu đã được gửi"})
-		return
-	}
-
-	tokenBytes := make([]byte, 16)
-	rand.Read(tokenBytes)
-	token := hex.EncodeToString(tokenBytes)
-	expiry := time.Now().Add(30 * time.Minute)
-
-	database.DB.Model(&user).Updates(map[string]interface{}{
-		"reset_token":        token,
-		"reset_token_expiry": expiry,
-	})
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Mã đặt lại mật khẩu đã được tạo (demo). Vui lòng dùng mã bên dưới.",
-		"data": gin.H{
-			"reset_token": token,
-			"expires_in":  "30 phút",
-		},
-	})
+// ForgotPassword sends reset tokens only to the account email, never to the caller.
+func ForgotPassword(cfg *config.Config) gin.HandlerFunc {
+	return forgotPasswordWithSender(services.NewSMTPPasswordResetSender(cfg))
 }
 
-// ResetPassword — UC 2.7.4
+func resetTokenHash(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
+
+func forgotPasswordWithSender(sender services.PasswordResetSender) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req ForgotPasswordRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Email không hợp lệ"})
+			return
+		}
+		if !sender.Configured() {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Khôi phục qua email chưa được cấu hình. Vui lòng liên hệ ban quản lý."})
+			return
+		}
+		const message = "Nếu email tồn tại, mã đặt lại mật khẩu sẽ được gửi tới email đã đăng ký."
+		var user models.User
+		if err := database.DB.Where("email = ? AND status = ?", req.Email, "active").First(&user).Error; err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Chưa thể xử lý yêu cầu. Vui lòng thử lại sau."})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"message": message})
+			return
+		}
+		tokenBytes := make([]byte, 32)
+		if _, err := rand.Read(tokenBytes); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Chưa thể tạo mã khôi phục"})
+			return
+		}
+		token := hex.EncodeToString(tokenBytes)
+		tokenHash := resetTokenHash(token)
+		now := time.Now()
+		// Do not repeatedly invalidate a code or send email more than once per minute.
+		update := database.DB.Model(&models.User{}).Where("id = ? AND (reset_token_expiry IS NULL OR reset_token_expiry < ?)", user.ID, now.Add(29*time.Minute)).Updates(map[string]interface{}{"reset_token": tokenHash, "reset_token_expiry": now.Add(30 * time.Minute)})
+		if update.Error != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Chưa thể xử lý yêu cầu. Vui lòng thử lại sau."})
+			return
+		}
+		if update.RowsAffected > 0 {
+			if err := sender.Send(user.Email, token); err != nil {
+				database.DB.Model(&models.User{}).Where("id = ? AND reset_token = ?", user.ID, tokenHash).Updates(map[string]interface{}{"reset_token": "", "reset_token_expiry": nil})
+				log.Print("Password reset email delivery failed")
+			}
+		}
+		c.JSON(http.StatusOK, gin.H{"message": message})
+	}
+}
+
 func ResetPassword(c *gin.Context) {
 	var req ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Thông tin đặt lại mật khẩu không hợp lệ"})
 		return
 	}
-
-	var user models.User
-	if err := database.DB.Where("email = ? AND reset_token = ?", req.Email, req.Token).First(&user).Error; err != nil {
+	tokenBytes, err := hex.DecodeString(req.Token)
+	if err != nil || len(tokenBytes) != 32 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã reset không hợp lệ hoặc đã hết hạn"})
 		return
 	}
-
-	if user.ResetTokenExpiry == nil || user.ResetTokenExpiry.Before(time.Now()) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã reset đã hết hạn"})
-		return
-	}
-
 	hashed, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Chưa thể cập nhật mật khẩu"})
 		return
 	}
-
-	database.DB.Model(&user).Updates(map[string]interface{}{
-		"password":           string(hashed),
-		"reset_token":        "",
-		"reset_token_expiry": nil,
-	})
-
+	// Atomically consume a valid token, including the expiry check, exactly once.
+	result := database.DB.Model(&models.User{}).Where("email = ? AND reset_token = ? AND reset_token_expiry > ? AND status = ?", req.Email, resetTokenHash(req.Token), time.Now(), "active").Updates(map[string]interface{}{"password": string(hashed), "reset_token": "", "reset_token_expiry": nil})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Chưa thể cập nhật mật khẩu"})
+		return
+	}
+	if result.RowsAffected != 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã reset không hợp lệ hoặc đã hết hạn"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"message": "Đặt lại mật khẩu thành công"})
 }
 

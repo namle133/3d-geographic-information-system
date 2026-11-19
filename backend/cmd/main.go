@@ -47,7 +47,7 @@ func main() {
 	{
 		public.POST("/auth/login", handlers.Login(cfg))
 		public.POST("/auth/register", handlers.Register)
-		public.POST("/auth/forgot-password", handlers.ForgotPassword)
+		public.POST("/auth/forgot-password", handlers.ForgotPassword(cfg))
 		public.POST("/auth/reset-password", handlers.ResetPassword)
 		public.GET("/buildings", handlers.GetBuildings)
 		public.GET("/buildings/:id", handlers.GetBuildingByID)
@@ -149,8 +149,9 @@ func main() {
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"status": "healthy",
-			"app":    "Vinhomes Property Management",
+			"status":  "healthy",
+			"version": os.Getenv("RAILWAY_GIT_COMMIT_SHA"),
+			"app":     "Vinhomes Property Management",
 		})
 	})
 

@@ -31,6 +31,7 @@ type Config struct {
 	SMTPPort     string
 	SMTPUser     string
 	SMTPPassword string
+	SMTPFrom     string
 
 	// App
 	AppEnv string
@@ -64,17 +65,22 @@ func LoadConfig() *Config {
 		SMTPPort:        getEnv("SMTP_PORT", "587"),
 		SMTPUser:        getEnv("SMTP_USER", ""),
 		SMTPPassword:    getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom:        getEnv("SMTP_FROM", getEnv("SMTP_USER", "")),
 		AppEnv:          getEnv("APP_ENV", "development"),
 		VNPayTmnCode:    getVNPayEnv("VNPAY_TMN_CODE"),
 		VNPayHashSecret: getVNPayEnv("VNPAY_HASH_SECRET"),
-		VNPayPayURL:     getEnv("VNPAY_PAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"),
-		VNPayReturnURL:  getEnv("VNPAY_RETURN_URL", "https://3d-geographic-information-system.vercel.app/pages/payment-result.html"),
-		VNPayIPNURL:     getEnv("VNPAY_IPN_URL", "https://3d-geographic-information-system-production.up.railway.app/api/v1/payments/vnpay/ipn"),
+		VNPayPayURL:     getVNPayEnv("VNPAY_PAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"),
+		VNPayReturnURL:  getVNPayEnv("VNPAY_RETURN_URL", "https://3d-geographic-information-system.vercel.app/pages/payment-result.html"),
+		VNPayIPNURL:     getVNPayEnv("VNPAY_IPN_URL", "https://3d-geographic-information-system-production.up.railway.app/api/v1/payments/vnpay/ipn"),
 	}
 }
 
-func getVNPayEnv(key string) string {
-	value := strings.TrimSpace(getEnv(key, ""))
+func getVNPayEnv(key string, defaults ...string) string {
+	fallback := ""
+	if len(defaults) > 0 {
+		fallback = defaults[0]
+	}
+	value := strings.TrimSpace(getEnv(key, fallback))
 	if len(value) >= 2 && ((value[0] == '"' && value[len(value)-1] == '"') || (value[0] == '\'' && value[len(value)-1] == '\'')) {
 		value = strings.TrimSpace(value[1 : len(value)-1])
 	}
@@ -84,11 +90,9 @@ func getVNPayEnv(key string) string {
 // loadEnvFiles ưu tiên config/.env rồi .env ở thư mục backend.
 func loadEnvFiles() {
 	for _, path := range []string{"config/.env", ".env"} {
-		if err := godotenv.Load(path); err == nil {
-			return
-		}
+		// Process environment > config/.env > .env; load only missing values.
+		_ = godotenv.Load(path)
 	}
-	_ = godotenv.Load()
 }
 
 func (c *Config) GetDSN() string {

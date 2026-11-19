@@ -10,17 +10,17 @@ import (
 // ========== M1: Authentication & Account Management ==========
 
 type User struct {
-	ID        string     `gorm:"primaryKey" json:"id"`
-	Username  string     `gorm:"uniqueIndex" json:"username"`
-	Email     string     `gorm:"uniqueIndex" json:"email"`
-	Password  string     `json:"-"`      // Hashed password
-	Role      string     `json:"role"`   // admin, manager, staff, resident
-	Status    string     `json:"status"` // active, inactive, locked
+	ID               string     `gorm:"primaryKey" json:"id"`
+	Username         string     `gorm:"uniqueIndex" json:"username"`
+	Email            string     `gorm:"uniqueIndex" json:"email"`
+	Password         string     `json:"-"`      // Hashed password
+	Role             string     `json:"role"`   // admin, manager, staff, resident
+	Status           string     `json:"status"` // active, inactive, locked
 	ResetToken       string     `json:"-"`
 	ResetTokenExpiry *time.Time `json:"-"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
+	DeletedAt        *time.Time `json:"deleted_at"`
 
 	// Relationships
 	Admin    *Admin    `json:"admin,omitempty"`
@@ -206,29 +206,32 @@ type Invoice struct {
 }
 
 type InvoicePayment struct {
-	ID         string    `gorm:"primaryKey" json:"id"`
-	InvoiceID  string    `gorm:"index" json:"invoice_id"`
-	Amount     float64   `json:"amount"`
-	Method     string    `json:"method"`              // cash, transfer, card, vnpay
-	Reference  string    `json:"reference,omitempty"` // Transaction reference
-	PaidAt     time.Time `json:"paid_at"`
-	RecordedBy string    `json:"recorded_by"` // Staff ID or "system"
+	PaymentTransactionID *string   `gorm:"uniqueIndex" json:"payment_transaction_id,omitempty"`
+	ID                   string    `gorm:"primaryKey" json:"id"`
+	InvoiceID            string    `gorm:"index" json:"invoice_id"`
+	Amount               float64   `json:"amount"`
+	Method               string    `json:"method"`              // cash, transfer, card, vnpay
+	Reference            string    `json:"reference,omitempty"` // Transaction reference
+	PaidAt               time.Time `json:"paid_at"`
+	RecordedBy           string    `json:"recorded_by"` // Staff ID or "system"
 
 	Invoice Invoice `gorm:"foreignKey:InvoiceID" json:"-"`
 }
 
 type PaymentTransaction struct {
-	ID            string         `gorm:"primaryKey" json:"id"`
-	InvoiceID     string         `gorm:"index" json:"invoice_id"`
-	UserID        string         `gorm:"index" json:"user_id"`
-	Amount        float64        `json:"amount"`
-	Provider      string         `json:"provider"` // vnpay
-	ProviderTxnID string         `gorm:"index" json:"provider_txn_id,omitempty"`
-	Status        string         `json:"status"` // pending, success, failed, expired, cancelled
-	PaymentURL    string         `json:"payment_url,omitempty"`
-	RawCallback   datatypes.JSON `json:"raw_callback,omitempty"`
-	CreatedAt     time.Time      `json:"created_at"`
-	CompletedAt   *time.Time     `json:"completed_at,omitempty"`
+	ID             string         `gorm:"primaryKey" json:"id"`
+	InvoiceID      string         `gorm:"index" json:"invoice_id"`
+	UserID         string         `gorm:"index" json:"user_id"`
+	Amount         float64        `json:"amount"`
+	Provider       string         `json:"provider"` // vnpay
+	ProviderTxnID  string         `gorm:"index" json:"provider_txn_id,omitempty"`
+	Status         string         `json:"status"` // pending, success, failed, expired, cancelled
+	PaymentURL     string         `json:"payment_url,omitempty"`
+	RawCallback    datatypes.JSON `json:"-"`
+	ExpiresAt      *time.Time     `json:"expires_at,omitempty"`
+	RequiresReview bool           `json:"requires_review"`
+	CreatedAt      time.Time      `json:"created_at"`
+	CompletedAt    *time.Time     `json:"completed_at,omitempty"`
 
 	Invoice Invoice `gorm:"foreignKey:InvoiceID" json:"-"`
 }
