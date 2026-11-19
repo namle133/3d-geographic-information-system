@@ -34,7 +34,7 @@ Explore the [live website](https://3d-geographic-information-system.vercel.app/p
 
 This account is for exploring the demo. Please avoid entering personal or confidential information in the shared account.
 
-Use **Chat with admin** in the resident portal to ask questions or share feedback. Administrators have a dedicated inbox with user search, unread counts, conversation history and open/resolved filters. Messages are saved and refresh automatically. Both interfaces support English and Vietnamese.
+Use **Chat with admin** in the resident portal to ask questions or share feedback. Administrators have a dedicated inbox with user search, unread counts, conversation history and open/resolved filters. Messages are saved and delivered through an authenticated WebSocket connection, with automatic reconnection and polling fallback. Both interfaces support English and Vietnamese.
 
 ## 🧭 Features
 
@@ -132,3 +132,7 @@ Built for learning 3D GIS visualization and property management workflows. The m
 **[🏙️ Visit Vinhomes West Point 3D GIS](https://3d-geographic-information-system.vercel.app)**
 
 </div>
+
+### Chat delivery
+
+Chat uses a single WebSocket connection per portal page. Message writes still use the authenticated HTTP API; WebSocket events immediately refresh the conversation and unread counts. Reconnecting clients reload saved history. The event hub currently runs in one backend instance; horizontal scaling requires a shared event bus (such as Redis Pub/Sub) before adding replicas.

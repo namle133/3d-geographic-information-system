@@ -5,6 +5,7 @@
 
 import authManager from './auth-manager.js';
 import chatAPI from '../api/chat.js';
+import chatRealtime from './chat-realtime.js';
 import notificationAPI from '../api/notifications.js';
 import { ROLES } from '../utils/constants.js';
 import { showConfirm } from '../utils/confirm-dialog.js';
@@ -219,8 +220,10 @@ async function initLayout(opts = {}) {
       document.querySelectorAll('.chat-entry-count').forEach(badge => { badge.hidden = !res.unread_count; badge.textContent = res.unread_count > 99 ? '99+' : res.unread_count; });
     } catch (_) { /* The entry remains usable if the badge request fails. */ }
   };
+  window.addEventListener('chat:updated', updateChatBadge);
+  chatRealtime.start();
   updateChatBadge();
-  setInterval(updateChatBadge, 15000);
+  setInterval(() => { if (!chatRealtime.connected) updateChatBadge(); }, 15000);
   return true;
 }
 
