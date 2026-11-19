@@ -665,3 +665,11 @@ input:checked + .switch-slider:before {
     text-decoration: none;
 }
 .admin-link-gis:hover { text-decoration: underline; }
+
+/* Language controls remain visible independently of the scrolling model controls. */
+.gis-language-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 20px; border-bottom:1px solid rgba(255,255,255,.1); flex-shrink:0; font-size:14px; }
+.gis-language-control .site-language-toggle { background:#111827; border:1px solid #536279; }
+.gis-language-control .language-option { color:#e2e8f0; min-width:48px; min-height:34px; font-size:14px; }
+.gis-language-control .language-option[aria-pressed="true"] { background:#67e8f9; color:#10202b; }
+.gis-language-control .language-option:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+@media(max-width:600px) { #controlPanel { width:min(350px,calc(100vw - 28px)); } }

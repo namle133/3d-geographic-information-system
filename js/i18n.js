@@ -1,6 +1,59 @@
 (function () {
   const STORAGE_KEY = 'vinhomes-language';
   const translations = {
+    "Họ tên là bắt buộc": "Full name is required",
+    "Họ tên phải từ 2-100 ký tự": "Full name must contain 2\u2013100 characters",
+    "CCCD là bắt buộc": "Citizen ID is required",
+    "Ngày sinh là bắt buộc": "Date of birth is required",
+    "Giới tính là bắt buộc": "Gender is required",
+    "Giới tính không hợp lệ": "Invalid gender",
+    "Số điện thoại là bắt buộc": "Phone number is required",
+    "Địa chỉ thường trú là bắt buộc": "Permanent address is required",
+    "Địa chỉ phải ít nhất 5 ký tự": "Address must contain at least 5 characters",
+    "Người dùng đã tồn tại": "User already exists",
+    "CCCD đã được đăng ký": "Citizen ID is already registered",
+    "Định dạng ngày sinh không hợp lệ (YYYY-MM-DD)": "Invalid date of birth format (YYYY-MM-DD)",
+    "Đăng ký thành công": "Registration successful",
+    "Đặt lại mật khẩu thành công": "Password reset successful",
+    "Cần nhập mật khẩu cũ": "Enter your current password",
+    "Mật khẩu cũ không đúng": "Current password is incorrect",
+    "Không có quyền xem hợp đồng này": "You do not have permission to view this contract",
+    "Hợp đồng đã duyệt nhưng không tạo được hóa đơn: ": "The contract was approved, but its invoice could not be created: ",
+    "Không tìm thấy hợp đồng active cho căn hộ/cư dân này. Vui lòng duyệt hợp đồng trước.": "No active contract was found for this apartment or resident. Approve the contract first.",
+    "Không thể sửa hóa đơn đã thanh toán đủ": "A fully paid invoice cannot be edited",
+    "Không thể sửa hóa đơn đã hủy": "A cancelled invoice cannot be edited",
+    "Tổng tiền không được nhỏ hơn số đã thu": "The total cannot be less than the amount already collected",
+    "Vui lòng chọn phương thức thanh toán": "Please select a payment method",
+    "start_date không hợp lệ (YYYY-MM-DD)": "Invalid start date (YYYY-MM-DD)",
+    "end_date không hợp lệ (YYYY-MM-DD)": "Invalid end date (YYYY-MM-DD)",
+    "end_date phải sau start_date": "The end date must be after the start date",
+    "Nhân viên không hợp lệ": "Invalid staff member",
+    "Username hoặc email đã tồn tại": "Username or email already exists",
+    "Không thể xóa tài khoản của chính mình": "You cannot delete your own account",
+    "Đã vô hiệu hóa tài khoản": "Account deactivated",
+    "Không có quyền truy cập hóa đơn": "Access denied to invoice",
+    "Hóa đơn không thể thanh toán": "Invoice is not payable",
+    "Không tìm thấy giao dịch thanh toán": "Payment transaction not found",
+    "VNPay chưa được cấu hình": "Vnpay not configured",
+    "Số tiền thanh toán không hợp lệ": "Invalid payment amount",
+    "Phản hồi VNPay không hợp lệ": "Invalid VNPay callback",
+    "Kết quả chưa được xác minh": "The result has not been verified",
+    "Chưa thể tạo mã khôi phục": "Unable to generate a reset code",
+    "Chưa thể cập nhật mật khẩu": "Unable to update the password",
+    "Thông tin đặt lại mật khẩu không hợp lệ": "Invalid password reset details",
+    "Chưa thể xử lý yêu cầu. Vui lòng thử lại sau.": "Unable to process your request. Please try again later.",
+    "Mã reset không hợp lệ hoặc đã hết hạn": "The reset code is invalid or has expired",
+    "Hóa đơn đang có giao dịch VNPay chờ xử lý. Vui lòng đợi giao dịch hoàn tất hoặc hết hạn trước khi thanh toán lại": "This invoice has a pending VNPay payment. Wait for it to finish or expire before paying again",
+    "Máy chủ ngoại tuyến": "Backend offline",
+    "đất": "soil",
+    "Đường": "Road",
+    "cỏ": "grass",
+    "Nền": "Ground",
+    "Nhập email đã đăng ký. Mã đặt lại mật khẩu sẽ được gửi tới email đã đăng ký.": "Enter your registered email. A password reset code will be sent to that email address.",
+    "Nhà hàng Pizza 4P": "Pizza 4P Restaurant",
+    "Lõi": "Core",
+    "Dốc": "Ramp",
+    "Cột": "Column",
     "Nếu email tồn tại, mã đặt lại mật khẩu sẽ được gửi tới email đã đăng ký.": "If the account exists, a reset code will be sent to its registered email address.",
     "Khôi phục qua email chưa được cấu hình. Vui lòng liên hệ ban quản lý.": "Password reset email is not configured. Please contact management.",
     "Mã được gửi trong email": "Code sent by email",
@@ -782,12 +835,18 @@
     'Hướng': 'Orientation',
     'Giá thuê': 'Rent'
   };
-  const entries = Object.entries(translations).sort((a, b) => b[0].length - a[0].length);
+  let entries = Object.entries(translations).sort((a, b) => b[0].length - a[0].length);
   const reverseTranslations = new Map();
   entries.forEach(([source, target]) => {
     if (!reverseTranslations.has(target)) reverseTranslations.set(target, source);
   });
   Object.entries({
+    "access denied to invoice": "Không có quyền truy cập hóa đơn",
+    "invoice is not payable": "Hóa đơn không thể thanh toán",
+    "payment transaction not found": "Không tìm thấy giao dịch thanh toán",
+    "vnpay not configured": "VNPay chưa được cấu hình",
+    "invalid payment amount": "Số tiền thanh toán không hợp lệ",
+    "invalid VNPay callback": "Phản hồi VNPay không hợp lệ",
     'Log in': 'Đăng nhập',
     'Completed': 'Đã hoàn thành',
     'Total apartments': 'Tổng số căn',
@@ -908,7 +967,17 @@
     'Maintenance Request Assigned': 'Yêu cầu bảo trì được phân công',
     'Equipment Maintenance Due': 'Đến hạn bảo trì thiết bị',
     'Payment Successful': 'Thanh toán thành công'
-  }).forEach(([source, target]) => reverseTranslations.set(source, target));
+  }).forEach(([source, target]) => {
+    // Legacy aliases include both directions. Keep the forward dictionary Vietnamese -> English.
+    if (/[À-ỹĐđ]/.test(source) && !/[À-ỹĐđ]/.test(target)) {
+      translations[source] ??= target;
+      reverseTranslations.set(target, source);
+    } else {
+      if (/[À-ỹĐđ]/.test(target)) translations[target] ??= source;
+      reverseTranslations.set(source, target);
+    }
+  });
+  entries = Object.entries(translations).sort((a, b) => b[0].length - a[0].length);
   reverseTranslations.set('Backend offline', 'Máy chủ ngoại tuyến');
   const reverseEntries = [...reverseTranslations.entries()]
     .filter(([source]) => source.length >= 4)
@@ -975,6 +1044,7 @@
 
   function translateText(value) {
     if (language === 'en') {
+      if (translations[value.trim()]) return value.replace(value.trim(), translations[value.trim()]);
       const translated = entries.reduce((text, [source, target]) => text.split(source).join(target), value);
       return translateEnumValues(translated);
     }
@@ -1005,6 +1075,7 @@
       return;
     }
     if (element.nodeType !== Node.ELEMENT_NODE) return;
+    if (element.matches('[data-no-translate], .site-language-switcher')) return;
     if (element.tagName === 'SCRIPT' || element.tagName === 'STYLE' || element.tagName === 'NOSCRIPT') return;
 
     const translatableAttributes = ['placeholder', 'title', 'aria-label', 'alt'];
@@ -1058,6 +1129,7 @@
       if (titleNode) translateElement(titleNode);
     }
     applying = false;
+    window.dispatchEvent(new CustomEvent('site:languagechange', { detail: { language } }));
   }
 
   function getValidationMessage(control) {
@@ -1120,6 +1192,7 @@
     select.className = 'site-language-switcher';
     select.setAttribute('aria-label', 'Language');
     select.title = 'Language';
+    select.setAttribute('data-no-translate', '');
     select.innerHTML = '<option value="vi">Tiếng Việt</option><option value="en">English</option>';
     select.value = language;
     select.addEventListener('change', () => setLanguage(select.value));
@@ -1134,6 +1207,7 @@
       container.appendChild(floatingSwitcher);
     } else {
       container.appendChild(createSwitcher(
+        container.classList.contains('gis-language-control') ||
         container.classList.contains('auth-language-control') ||
         container.classList.contains('login-language-control')
       ));
@@ -1142,7 +1216,7 @@
 
   function initialize() {
     document.documentElement.lang = language;
-    const loginLanguage = document.querySelector('.auth-language-control, .login-language-control');
+    const loginLanguage = document.querySelector('.gis-language-control, .auth-language-control, .login-language-control');
     const navRight = document.querySelector('.navbar-right');
     if (loginLanguage) {
       mountSwitcher(loginLanguage);

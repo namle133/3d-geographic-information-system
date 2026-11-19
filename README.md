@@ -1,121 +1,122 @@
-# 3D Geographic Information System — Vinhomes West Point
+<div align="center">
 
-A 3D visualization of the **Vinhomes West Point** urban complex located in Pham Hung, Me Tri, Nam Tu Liem, Hanoi, Vietnam.
+# 🏙️ Vinhomes West Point · 3D GIS
 
-The project models the three main towers **W1, W2, and W3**, together with the podium, using `SceneView` from the **ArcGIS Maps SDK for JavaScript 4.30**.
+### Explore the city in 3D. Manage the community in one place.
 
-This project was developed as an academic project for the **3D Geographic Information Systems (3D GIS)** course.
+[![Website](https://img.shields.io/badge/🌐_Live_website-Visit-0891b2?style=for-the-badge)](https://3d-geographic-information-system.vercel.app)
+[![ArcGIS](https://img.shields.io/badge/ArcGIS_JS-4.30-0079c1?style=for-the-badge)](https://developers.arcgis.com/javascript/)
+![Go](https://img.shields.io/badge/Go-1.25-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![Languages](https://img.shields.io/badge/Languages-VI_%7C_EN-6366f1?style=for-the-badge)
 
-## Project Structure
+**[🚀 Open website](https://3d-geographic-information-system.vercel.app)**
+&nbsp; · &nbsp;
+**[🗺️ Explore 3D](https://3d-geographic-information-system.vercel.app/index.html)**
+
+</div>
+
+---
+
+[![Vinhomes West Point 3D model with English controls](docs/images/3d-gis-preview.jpg)](https://3d-geographic-information-system.vercel.app/index.html)
+
+## ✨ About the project
+
+An academic **3D Geographic Information Systems** project combining an interactive model of **Vinhomes West Point, Hanoi** with a property management portal. The scene represents towers **W1, W2, W3**, the podium, roads, landscaping and rooftop amenities.
+
+
+## 🧭 Features
+
+| Feature | Description |
+|---|---|
+| 🏙️ **3D scene** | Explore towers, building layers and construction phases |
+| 🗺️ **Map tools** | Switch basemaps, reset the view and inspect coordinates |
+| 🏠 **Apartment status** | Filter apartments by tower, floor and occupancy status |
+| 👥 **Management** | Role-based access for administrators, managers, staff and residents |
+| 📋 **Operations** | Residents, contracts, invoices, maintenance and notifications |
+| 💳 **VNPay sandbox** | QR checkout with server-side payment confirmation |
+| 🌐 **VI / EN** | Switch language across pages and the 3D control panel |
+
+> **Language preference:** English and Vietnamese are available throughout the interface. Your choice is saved in the browser and carried across pages.
+
+## 🛠️ Technology
 
 ```text
-3d-geographic-information-system/
-├── index.html          # Main page containing the ArcGIS SDK and UI overlays
-├── css/
-│   └── style.css       # Styles for the title bar and north arrow
-├── docs/
-│   └── diagrams/       # Architecture diagrams (PNG/SVG)
-├── js/
-│   ├── buildings.js    # Approximate building coordinates and dimensions
-│   └── app.js          # Map, SceneView, Mesh objects, and widgets
-└── README.md
+Frontend     HTML · CSS · JavaScript · ArcGIS Maps SDK 4.30
+Backend      Go 1.25 · Gin · GORM
+Database     PostgreSQL
+Hosting      Vercel (frontend) · Railway (backend)
+Integration  VNPay PAY 2.1.0 — Sandbox
 ```
 
-## Features
+## 🗂️ Project structure
 
-### English and Vietnamese
+```text
+├── index.html                  # Interactive 3D scene
+├── pages/                      # Management and resident portal
+├── css/                        # Portal, scene and language controls
+├── js/
+│   ├── app.js                  # ArcGIS scene and interaction
+│   ├── i18n.js                 # English / Vietnamese localization
+│   ├── api/                    # Backend API clients
+│   ├── gis/                    # Apartment status overlay
+│   └── towers/, podium/, ...   # Building geometry and scene modules
+├── backend/
+│   ├── cmd/                    # Server entry point
+│   ├── config/                 # Environment configuration
+│   ├── internal/               # Models, handlers and services
+│   └── scripts/                # PostgreSQL integration tests
+└── tests/                      # Frontend regression tests
+```
 
-The website UI is available in English and Vietnamese. Use the language selector on any page to switch languages; the selection is saved in the browser and carried across pages. Vietnamese remains the default for visitors without a saved preference.
+## 🚀 Run locally
 
-### Interactive 3D Map
+### 1. Backend
 
-The application uses `SceneView` from the ArcGIS Maps SDK for JavaScript to provide an interactive 3D visualization of the Vinhomes West Point complex.
+Requires **Go 1.25+** and **Docker** for the bundled PostgreSQL setup.
 
-### 3D Building Models
+```sh
+cd backend
+cp config/.env.example config/.env
+# Edit config/.env with your local settings.
+./run.sh
+```
 
-The scene contains:
+The backend listens on `http://localhost:8080` by default. See [backend setup](backend/README.md) for details.
 
-- Tower W1
-- Tower W2
-- Tower W3
-- Podium
+### 2. Frontend
 
-The buildings are constructed using `Mesh.createBox` and include several architectural components such as:
+From the repository root, serve the static files:
 
-- Glass building bodies
-- Floor bands
-- Corner columns
-- Mullions
-- Technical structures
-- Antennas
+```sh
+python3 -m http.server 5500
+```
 
-Building coordinates and dimensions are approximated for visualization purposes.
+Open [local portal](http://localhost:5500/pages/login.html) or [local 3D model](http://localhost:5500/index.html). Localhost pages use the local backend automatically; hosted pages use Railway. To use another backend, configure `window.__API_BASE_URL` in `js/env-config.js`.
 
-### Basemap Selection
+### 3. Run checks
 
-The default basemap is **OpenStreetMap**.
+```sh
+node --test tests/*.test.mjs
+cd backend
+go test ./...
+./scripts/test-integration.sh
+```
 
-Users can switch between several basemap styles:
+The integration script starts and removes an isolated PostgreSQL test container.
 
-- OpenStreetMap
-- Satellite
-- Hybrid
-- Topographic
-- Streets
-- Dark Gray
+## 💳 Payment setup
 
-The basemap selector is located in the upper-right corner of the application.
+VNPay is currently configured for **sandbox testing**. Terminal approval and IPN registration are managed by VNPay. See [VNPay deployment notes](backend/VNPAY_DEPLOYMENT.md) for configuration and callback behavior. Keep credentials in environment variables.
 
-### Compass and North Arrow
+## 📚 Academic context
 
-The application provides two orientation tools:
+Built for learning 3D GIS visualization and property management workflows. The model is an approximate representation, rather than a survey or construction reference.
 
-- The **Esri Compass widget** in the upper-left corner. Clicking it resets the scene orientation toward North.
-- A custom **North Arrow** in the lower-right corner displaying the four cardinal directions: N, E, S, and W.
 
-The red arrow dynamically remains pointed toward geographic North regardless of camera rotation.
+---
 
-### Map Navigation Tools
+<div align="center">
 
-The application includes several tools for interacting with the 3D scene:
+**[🏙️ Visit Vinhomes West Point 3D GIS](https://3d-geographic-information-system.vercel.app)**
 
-- Home
-- Fullscreen
-- Scale Bar
-- Coordinate Readout
-- Zoom
-- Navigation Toggle
-- Search
-
-## Technologies
-
-- HTML5
-- CSS3
-- JavaScript
-- ArcGIS Maps SDK for JavaScript 4.30
-- ArcGIS `SceneView`
-- ArcGIS `Mesh`
-
-## How to Run
-
-### Using Visual Studio Code
-
-1. Clone or download this repository.
-2. Open the project folder in **Visual Studio Code**.
-3. Install the **Live Server** extension.
-4. Right-click `index.html`.
-5. Select **Open with Live Server**.
-6. The application will open in your web browser.
-
-## Academic Context
-
-This project was developed as an individual academic project for the **3D Geographic Information Systems (3D GIS)** course.
-
-The project demonstrates the use of web-based GIS technologies to create and visualize a three-dimensional urban environment, including 3D building geometry, spatial navigation, basemap switching, coordinate visualization, and orientation tools.
-
-## Author
-
-**Le Thanh Nam** - **Nguyen Huu Duy Dat** - **Nguyen Tan Hoang**
-
-Bachelor of Science in Information Technology  
-VNUHCM - University of Information Technology (UIT)
+</div>
