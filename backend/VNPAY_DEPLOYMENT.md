@@ -7,10 +7,13 @@ The payment integration uses VNPay PAY 2.1.0. The Merchant View migration notice
 Set `VNPAY_TMN_CODE` and `VNPAY_HASH_SECRET` from your sandbox registration. Do not put credentials in source or logs.
 
 ```dotenv
+VNPAY_BANK_CODE=VNPAYQR
 VNPAY_PAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 VNPAY_RETURN_URL=https://3d-geographic-information-system.vercel.app/pages/payment-result.html
 VNPAY_IPN_URL=https://3d-geographic-information-system-production.up.railway.app/api/v1/payments/vnpay/ipn
 ```
+
+New checkout links default to the official QR channel (`vnp_BankCode=VNPAYQR`). To show the provider method selector, set `VNPAY_BANK_CODE` to an empty value. Existing pending links retain their original channel until expiry.
 
 Register the public IPN URL with VNPay. Setting the variable alone does not register it. Error 71, "Website này chưa được phê duyệt", requires VNPay to check the terminal approval/activation status.
 

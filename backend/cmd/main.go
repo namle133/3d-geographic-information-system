@@ -149,9 +149,10 @@ func main() {
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"status":  "healthy",
-			"version": os.Getenv("RAILWAY_GIT_COMMIT_SHA"),
-			"app":     "Vinhomes Property Management",
+			"status":                "healthy",
+			"version":               os.Getenv("RAILWAY_GIT_COMMIT_SHA"),
+			"vnpay_checkout_method": cfg.VNPayBankCode,
+			"app":                   "Vinhomes Property Management",
 		})
 	})
 

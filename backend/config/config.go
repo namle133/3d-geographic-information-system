@@ -42,6 +42,7 @@ type Config struct {
 	VNPayPayURL     string
 	VNPayReturnURL  string
 	VNPayIPNURL     string
+	VNPayBankCode   string
 }
 
 func LoadConfig() *Config {
@@ -72,6 +73,7 @@ func LoadConfig() *Config {
 		VNPayPayURL:     getVNPayEnv("VNPAY_PAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"),
 		VNPayReturnURL:  getVNPayEnv("VNPAY_RETURN_URL", "https://3d-geographic-information-system.vercel.app/pages/payment-result.html"),
 		VNPayIPNURL:     getVNPayEnv("VNPAY_IPN_URL", "https://3d-geographic-information-system-production.up.railway.app/api/v1/payments/vnpay/ipn"),
+		VNPayBankCode:   getVNPayEnv("VNPAY_BANK_CODE", "VNPAYQR"),
 	}
 }
 
