@@ -18,6 +18,8 @@
 
 ---
 
+[![Vinhomes West Point 3D model with English controls](docs/images/3d-gis-preview.jpg)](https://3d-geographic-information-system.vercel.app/index.html)
+
 ## ✨ About / Giới thiệu
 
 An academic **3D Geographic Information Systems** project combining an interactive model of **Vinhomes West Point, Hanoi** with a property management portal. The scene represents towers **W1, W2, W3**, the podium, roads, landscaping and rooftop amenities.
