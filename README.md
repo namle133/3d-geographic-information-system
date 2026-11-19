@@ -3,16 +3,15 @@
 # 🏙️ Vinhomes West Point · 3D GIS
 
 ### Explore the city in 3D. Manage the community in one place.
-### Khám phá không gian 3D · Quản lý khu dân cư
 
 [![Website](https://img.shields.io/badge/🌐_Live_website-Visit-0891b2?style=for-the-badge)](https://3d-geographic-information-system.vercel.app)
 [![ArcGIS](https://img.shields.io/badge/ArcGIS_JS-4.30-0079c1?style=for-the-badge)](https://developers.arcgis.com/javascript/)
 ![Go](https://img.shields.io/badge/Go-1.25-00ADD8?style=for-the-badge&logo=go&logoColor=white)
 ![Languages](https://img.shields.io/badge/Languages-VI_%7C_EN-6366f1?style=for-the-badge)
 
-**[🚀 Open website / Mở website](https://3d-geographic-information-system.vercel.app)**
+**[🚀 Open website](https://3d-geographic-information-system.vercel.app)**
 &nbsp; · &nbsp;
-**[🗺️ Explore 3D / Xem mô hình](https://3d-geographic-information-system.vercel.app/index.html)**
+**[🗺️ Explore 3D](https://3d-geographic-information-system.vercel.app/index.html)**
 
 </div>
 
@@ -20,27 +19,26 @@
 
 [![Vinhomes West Point 3D model with English controls](docs/images/3d-gis-preview.jpg)](https://3d-geographic-information-system.vercel.app/index.html)
 
-## ✨ About / Giới thiệu
+## ✨ About the project
 
 An academic **3D Geographic Information Systems** project combining an interactive model of **Vinhomes West Point, Hanoi** with a property management portal. The scene represents towers **W1, W2, W3**, the podium, roads, landscaping and rooftop amenities.
 
-Đồ án môn **Hệ thống thông tin địa lý 3 chiều**, kết hợp mô hình tương tác Vinhomes West Point với cổng quản lý tòa nhà, cư dân và vận hành. Kích thước và tọa độ công trình được mô phỏng phục vụ trực quan hóa.
 
-## 🧭 Explore / Khám phá
+## 🧭 Features
 
-| | English | Tiếng Việt |
-|---|---|---|
-| 🏙️ **3D scene** | Explore towers, building layers and construction phases | Khám phá tòa nhà, lớp kiến trúc và các giai đoạn thi công |
-| 🗺️ **Map tools** | Switch basemaps, reset the view and inspect coordinates | Chọn bản đồ nền, đặt lại góc nhìn và xem tọa độ |
-| 🏠 **Apartment status** | Filter apartments by tower, floor and occupancy status | Lọc căn hộ theo tòa, tầng và trạng thái sử dụng |
-| 👥 **Management** | Role-based access for administrators, managers, staff and residents | Phân quyền quản trị viên, ban quản lý, nhân viên và cư dân |
-| 📋 **Operations** | Residents, contracts, invoices, maintenance and notifications | Quản lý cư dân, hợp đồng, hóa đơn, bảo trì và thông báo |
-| 💳 **VNPay sandbox** | QR checkout with server-side payment confirmation | Thanh toán QR thử nghiệm, xác nhận giao dịch qua máy chủ |
-| 🌐 **VI / EN** | Switch language across pages and the 3D control panel | Chọn tiếng Việt hoặc Anh trên các trang và bảng điều khiển 3D |
+| Feature | Description |
+|---|---|
+| 🏙️ **3D scene** | Explore towers, building layers and construction phases |
+| 🗺️ **Map tools** | Switch basemaps, reset the view and inspect coordinates |
+| 🏠 **Apartment status** | Filter apartments by tower, floor and occupancy status |
+| 👥 **Management** | Role-based access for administrators, managers, staff and residents |
+| 📋 **Operations** | Residents, contracts, invoices, maintenance and notifications |
+| 💳 **VNPay sandbox** | QR checkout with server-side payment confirmation |
+| 🌐 **VI / EN** | Switch language across pages and the 3D control panel |
 
-> **Language / Ngôn ngữ:** Your preference is saved in the browser. Lựa chọn ngôn ngữ được lưu trong trình duyệt và dùng cho các trang tiếp theo.
+> **Language preference:** English and Vietnamese are available throughout the interface. Your choice is saved in the browser and carried across pages.
 
-## 🛠️ Technology / Công nghệ
+## 🛠️ Technology
 
 ```text
 Frontend     HTML · CSS · JavaScript · ArcGIS Maps SDK 4.30
@@ -50,7 +48,7 @@ Hosting      Vercel (frontend) · Railway (backend)
 Integration  VNPay PAY 2.1.0 — Sandbox
 ```
 
-## 🗂️ Project structure / Cấu trúc
+## 🗂️ Project structure
 
 ```text
 ├── index.html                  # Interactive 3D scene
@@ -70,7 +68,7 @@ Integration  VNPay PAY 2.1.0 — Sandbox
 └── tests/                      # Frontend regression tests
 ```
 
-## 🚀 Run locally / Chạy trên máy
+## 🚀 Run locally
 
 ### 1. Backend
 
@@ -95,7 +93,7 @@ python3 -m http.server 5500
 
 Open [local portal](http://localhost:5500/pages/login.html) or [local 3D model](http://localhost:5500/index.html). Localhost pages use the local backend automatically; hosted pages use Railway. To use another backend, configure `window.__API_BASE_URL` in `js/env-config.js`.
 
-### 3. Checks / Kiểm tra
+### 3. Run checks
 
 ```sh
 node --test tests/*.test.mjs
@@ -106,15 +104,14 @@ go test ./...
 
 The integration script starts and removes an isolated PostgreSQL test container.
 
-## 💳 Payment setup / Cấu hình thanh toán
+## 💳 Payment setup
 
 VNPay is currently configured for **sandbox testing**. Terminal approval and IPN registration are managed by VNPay. See [VNPay deployment notes](backend/VNPAY_DEPLOYMENT.md) for configuration and callback behavior. Keep credentials in environment variables.
 
-## 📚 Academic context / Phạm vi đồ án
+## 📚 Academic context
 
 Built for learning 3D GIS visualization and property management workflows. The model is an approximate representation, rather than a survey or construction reference.
 
-Mô hình phục vụ học tập và minh họa nghiệp vụ, không thay thế hồ sơ khảo sát hoặc thiết kế thi công.
 
 ---
 
