@@ -1,6 +1,9 @@
 package config
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestLoadConfigDoesNotDefaultVNPayCredentials(t *testing.T) {
 	t.Setenv("VNPAY_TMN_CODE", "")
@@ -34,5 +37,24 @@ func TestGetVNPayEnvTrimsWhitespaceAndMatchingQuotes(t *testing.T) {
 				t.Fatalf("getVNPayEnv() = %q, want %q", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestVNPayCheckoutDefaultsToQRAndAllowsOverride(t *testing.T) {
+	t.Chdir(t.TempDir())
+	t.Setenv("VNPAY_BANK_CODE", "")
+	if err := os.Unsetenv("VNPAY_BANK_CODE"); err != nil {
+		t.Fatal(err)
+	}
+	if got := LoadConfig().VNPayBankCode; got != "VNPAYQR" {
+		t.Fatalf("default checkout channel: %q", got)
+	}
+	t.Setenv("VNPAY_BANK_CODE", "VNBANK")
+	if got := LoadConfig().VNPayBankCode; got != "VNBANK" {
+		t.Fatalf("override checkout channel: %q", got)
+	}
+	t.Setenv("VNPAY_BANK_CODE", "")
+	if got := LoadConfig().VNPayBankCode; got != "" {
+		t.Fatalf("empty setting must show all methods: %q", got)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/hex"
+	"github.com/uit/vinhomes-management/config"
 	"math"
 	"net/url"
 	"strings"
@@ -137,5 +138,38 @@ func TestVNPayBuildURLAndAmountValidation(t *testing.T) {
 		if _, err := client.BuildPaymentURL("ref", "info", "203.0.113.10", amount); err == nil {
 			t.Fatalf("accepted invalid amount %v", amount)
 		}
+	}
+}
+
+func TestVNPayQRChannelIsIncludedInSignedPaymentURL(t *testing.T) {
+	client := NewVNPayClient(&config.Config{VNPayTmnCode: "AUDIT123", VNPayHashSecret: "test-secret", VNPayPayURL: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html", VNPayReturnURL: "https://example.com/result", VNPayBankCode: "VNPAYQR"})
+	link, err := client.BuildPaymentURL("qr-test", "Thanh toan QR", "203.0.113.10", 10000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsed, _ := url.Parse(link)
+	q := parsed.Query()
+	if q.Get("vnp_BankCode") != "VNPAYQR" {
+		t.Fatal("QR channel missing")
+	}
+	p := map[string]string{}
+	for k, v := range q {
+		p[k] = v[0]
+	}
+	if !client.VerifyCallback(p) {
+		t.Fatal("QR channel must be covered by the checksum")
+	}
+	p["vnp_BankCode"] = "VNBANK"
+	if client.VerifyCallback(p) {
+		t.Fatal("tampered channel accepted")
+	}
+	client.BankCode = ""
+	link, err = client.BuildPaymentURL("all-methods", "Thanh toan", "203.0.113.10", 10000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsed, _ = url.Parse(link)
+	if parsed.Query().Has("vnp_BankCode") {
+		t.Fatal("empty setting must allow method selection")
 	}
 }

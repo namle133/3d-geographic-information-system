@@ -21,6 +21,7 @@ type VNPayClient struct {
 	PayURL     string
 	ReturnURL  string
 	IPNURL     string
+	BankCode   string
 }
 
 const vnPayPaymentTTL = 15 * time.Minute
@@ -41,6 +42,7 @@ func NewVNPayClient(cfg *config.Config) *VNPayClient {
 		PayURL:     cfg.VNPayPayURL,
 		ReturnURL:  cfg.VNPayReturnURL,
 		IPNURL:     cfg.VNPayIPNURL,
+		BankCode:   cfg.VNPayBankCode,
 	}
 }
 
@@ -144,6 +146,9 @@ func (v *VNPayClient) BuildPaymentURL(txnRef, orderInfo, clientIP string, amount
 		"vnp_IpAddr":     clientIP,
 		"vnp_CreateDate": now.Format("20060102150405"),
 		"vnp_ExpireDate": expire.Format("20060102150405"),
+	}
+	if v.BankCode != "" {
+		params["vnp_BankCode"] = v.BankCode
 	}
 
 	hash := v.sign(params)
