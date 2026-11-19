@@ -1,4 +1,5 @@
 import { initLayout } from "./layout.js";
+import chatRealtime from "./chat-realtime.js";
 import authManager from "./auth-manager.js";
 import chatAPI from "../api/chat.js";
 import { formatDate } from "../utils/helpers.js";
@@ -261,8 +262,9 @@ if (admin) {
     error(e.message);
   }
 } else await selectPerson(null);
-let refreshing = false;
-setInterval(async () => {
+let refreshing = false,
+  refreshQueued = false;
+async function refreshChat() {
   if (document.hidden || refreshing || busy) return;
   refreshing = true;
   try {
@@ -273,4 +275,20 @@ setInterval(async () => {
   } finally {
     refreshing = false;
   }
+}
+window.addEventListener("chat:updated", () => {
+  if (refreshQueued) return;
+  refreshQueued = true;
+  const run = async () => {
+    if (busy || loading || refreshing) {
+      setTimeout(run, 100);
+      return;
+    }
+    refreshQueued = false;
+    await refreshChat();
+  };
+  run();
+});
+setInterval(() => {
+  if (!chatRealtime.connected) refreshChat();
 }, 5000);

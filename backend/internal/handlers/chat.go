@@ -185,6 +185,7 @@ func SendChatMessage(c *gin.Context) {
 		c.JSON(409, gin.H{"error": "Unable to send message. Refresh and try again."})
 		return
 	}
+	publishChat(thread)
 	c.JSON(200, gin.H{"data": msg})
 }
 func ReadChat(c *gin.Context) {
@@ -208,9 +209,13 @@ func ReadChat(c *gin.Context) {
 	if chatAdmin(c) {
 		field = "admin_read_at"
 	}
-	if err := database.DB.Model(thread).Where(field+" IS NULL OR "+field+" < ?", msg.CreatedAt).Update(field, msg.CreatedAt).Error; err != nil {
+	result := database.DB.Model(thread).Where(field+" IS NULL OR "+field+" < ?", msg.CreatedAt).Update(field, msg.CreatedAt)
+	if result.Error != nil {
 		c.JSON(500, gin.H{"error": "Unable to mark messages as read"})
 		return
+	}
+	if result.RowsAffected > 0 {
+		publishChat(thread)
 	}
 	c.JSON(200, gin.H{"success": true})
 }
@@ -234,6 +239,7 @@ func ChatStatus(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Unable to update conversation"})
 		return
 	}
+	publishChat(thread)
 	c.JSON(200, gin.H{"success": true})
 }
 

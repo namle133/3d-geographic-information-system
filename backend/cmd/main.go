@@ -45,6 +45,7 @@ func main() {
 	// ========== Public Routes (No Authentication) ==========
 	public := router.Group("/api/v1")
 	{
+		public.GET("/chat/ws", handlers.ChatSocket(cfg))
 		public.POST("/auth/login", handlers.Login(cfg))
 		public.POST("/auth/register", handlers.Register)
 		public.POST("/auth/forgot-password", handlers.ForgotPassword(cfg))
