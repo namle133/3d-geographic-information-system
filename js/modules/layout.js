@@ -4,6 +4,7 @@
  */
 
 import authManager from './auth-manager.js';
+import chatAPI from '../api/chat.js';
 import notificationAPI from '../api/notifications.js';
 import { ROLES } from '../utils/constants.js';
 import { showConfirm } from '../utils/confirm-dialog.js';
@@ -26,6 +27,7 @@ const ADMIN_MENU = [
   { id: 'maintenance', label: 'Bảo trì', href: '/pages/maintenance.html', roles: ['admin', 'manager', 'staff'] },
   { id: 'reports', label: 'Báo cáo', href: '/pages/reports.html', roles: ['admin', 'manager'] },
   { id: 'users', label: 'Tài khoản', href: '/pages/users.html', roles: ['admin'] },
+  { id: 'chat', label: 'Trò chuyện', href: '/pages/chat.html', roles: ['admin', 'manager', 'staff', 'resident'] },
   { id: 'notifications', label: 'Thông báo', href: '/pages/notifications.html', roles: ['admin', 'manager', 'staff', 'resident'] },
 ];
 
@@ -36,6 +38,7 @@ const RESIDENT_MENU = [
   { id: 'contracts', label: 'Hợp đồng', href: '/pages/contracts.html', roles: ['resident'] },
   { id: 'invoices', label: 'Hóa đơn', href: '/pages/invoices.html', roles: ['resident'] },
   { id: 'maintenance', label: 'Bảo trì', href: '/pages/maintenance.html', roles: ['resident'] },
+  { id: 'chat', label: 'Trò chuyện', href: '/pages/chat.html', roles: ['admin', 'manager', 'staff', 'resident'] },
   { id: 'notifications', label: 'Thông báo', href: '/pages/notifications.html', roles: ['resident'] },
 ];
 
@@ -54,7 +57,7 @@ function buildNavItems(role) {
     .map((item) => {
       const active = item.id === currentPage ? ' active' : '';
       const target = item.external ? ' target="_blank"' : '';
-      return `<li><a href="${item.href}" class="nav-link${active}"${target}>${item.label}</a></li>`;
+      return `<li><a href="${item.href}" class="nav-link${active}"${target}>${item.label}${item.id === 'chat' ? ' <span class="chat-entry-count" hidden></span>' : ''}</a></li>`;
     })
     .join('');
 }
@@ -203,6 +206,21 @@ async function initLayout(opts = {}) {
     } catch (_) {}
   });
 
+  if (role === 'resident' && getCurrentPageId() !== 'chat') {
+    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/css/chat.css'; document.head.appendChild(css);
+    const entry = document.createElement('a'); entry.href = '/pages/chat.html'; entry.className = 'resident-chat-fab';
+    entry.innerHTML = '<span aria-hidden="true">◌</span><span>Trò chuyện với quản trị viên</span><span class="chat-entry-count" hidden></span>';
+    document.body.appendChild(entry);
+  }
+  const updateChatBadge = async () => {
+    if (document.hidden) return;
+    try {
+      const res = await chatAPI.unread();
+      document.querySelectorAll('.chat-entry-count').forEach(badge => { badge.hidden = !res.unread_count; badge.textContent = res.unread_count > 99 ? '99+' : res.unread_count; });
+    } catch (_) { /* The entry remains usable if the badge request fails. */ }
+  };
+  updateChatBadge();
+  setInterval(updateChatBadge, 15000);
   return true;
 }
 

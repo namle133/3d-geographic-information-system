@@ -44,7 +44,7 @@ func OpenDB(t *testing.T) *gorm.DB {
 		sqlBase, _ := base.DB()
 		sqlBase.Close()
 	})
-	if err := db.AutoMigrate(&models.User{}, &models.Building{}, &models.Floor{}, &models.Apartment{}, &models.Resident{}, &models.Contract{}, &models.Invoice{}, &models.InvoicePayment{}, &models.PaymentTransaction{}, &models.Notification{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Building{}, &models.Floor{}, &models.Apartment{}, &models.Resident{}, &models.Contract{}, &models.Invoice{}, &models.InvoicePayment{}, &models.PaymentTransaction{}, &models.Notification{}, &models.ChatConversation{}, &models.ChatMessage{}); err != nil {
 		t.Fatal(err)
 	}
 	return db

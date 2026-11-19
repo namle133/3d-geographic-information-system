@@ -74,6 +74,8 @@ func runMigrations() error {
 
 		// Notifications & Audit
 		&models.Notification{},
+		&models.ChatConversation{},
+		&models.ChatMessage{},
 		&models.AuditLog{},
 	)
 

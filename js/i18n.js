@@ -1,6 +1,38 @@
 (function () {
   const STORAGE_KEY = 'vinhomes-language';
   const translations = {
+    "Tin nhắn chỉ hiển thị cho người dùng này và quản trị viên.": "Messages are visible only to this user and administrators.",
+    "Trò chuyện": "Messages",
+    "Trò chuyện với quản trị viên": "Chat with admin",
+    "Một nơi để hỏi, chia sẻ và nhận hỗ trợ từ ban quản trị.": "A place to ask questions, share feedback and get help from your building team.",
+    "Danh sách cuộc trò chuyện": "Conversation list",
+    "Hộp thư": "Inbox",
+    "Tìm người dùng": "Find a user",
+    "Tìm tên hoặc email...": "Search by name or email...",
+    "Lọc cuộc trò chuyện": "Filter conversations",
+    "Đang mở": "Open",
+    "Đã giải quyết": "Resolved",
+    "Nội dung trò chuyện": "Conversation",
+    "Chọn một cuộc trò chuyện": "Choose a conversation",
+    "Mọi tin nhắn và người dùng trong một không gian.": "All your messages and people, in one place.",
+    "Đánh dấu đã giải quyết": "Mark as resolved",
+    "Mở lại cuộc trò chuyện": "Reopen conversation",
+    "Lịch sử tin nhắn": "Message history",
+    "Tải tin nhắn cũ hơn": "Load older messages",
+    "Tin nhắn của bạn": "Your message",
+    "Viết tin nhắn của bạn...": "Write your message...",
+    "Gửi tin nhắn": "Send message",
+    "Tin nhắn được lưu lại. Phản hồi của quản trị viên sẽ xuất hiện tại đây.": "Your messages are saved. Replies from your administrator will appear here.",
+    "Chưa có tin nhắn": "No messages yet",
+    "Không tìm thấy cuộc trò chuyện": "No conversations found",
+    "Bắt đầu cuộc trò chuyện. Chúng tôi luôn sẵn lòng lắng nghe.": "Start a conversation. We are here to help.",
+    "Có tin nhắn mới": "New message received",
+    "Ban quản trị Vinhomes": "Vinhomes administration",
+    "Hỗ trợ cư dân": "Resident support",
+    "Trung tâm trò chuyện": "Conversation center",
+    "Kết nối với cư dân, theo dõi tin chưa đọc và quản lý mọi cuộc trò chuyện.": "Connect with residents, follow unread messages and manage every conversation.",
+    "Bạn cần hỗ trợ?": "Need a hand?",
+    "Trò chuyện trực tiếp với quản trị viên về căn hộ và dịch vụ của bạn.": "Message your administrator about your apartment and community services.",
     "Thông báo chung": "General notice",
     "HĐ sắp hết hạn": "Contract expiring soon",
     "HĐ đã duyệt": "Contract approved",
@@ -858,6 +890,19 @@
     if (!reverseTranslations.has(target)) reverseTranslations.set(target, source);
   });
   Object.entries({
+    "Conversation not found": "Không tìm thấy cuộc trò chuyện",
+    "Unable to load conversation": "Không thể tải cuộc trò chuyện",
+    "Unable to load conversations": "Không thể tải danh sách trò chuyện",
+    "Select a user": "Vui lòng chọn người dùng",
+    "This account is inactive": "Tài khoản này không hoạt động",
+    "Unable to open conversation": "Không thể mở cuộc trò chuyện",
+    "Unable to load messages": "Không thể tải tin nhắn",
+    "Invalid message": "Tin nhắn không hợp lệ",
+    "Messages must contain 1\u20132000 characters": "Tin nhắn phải có từ 1 đến 2000 ký tự",
+    "Unable to send message. Refresh and try again.": "Không thể gửi tin nhắn. Vui lòng tải lại và thử lại.",
+    "Unable to mark messages as read": "Không thể đánh dấu tin nhắn đã đọc",
+    "Unable to update conversation": "Không thể cập nhật cuộc trò chuyện",
+    "Unable to load unread messages": "Không thể tải số tin nhắn chưa đọc",
     "access denied to invoice": "Không có quyền truy cập hóa đơn",
     "invoice is not payable": "Hóa đơn không thể thanh toán",
     "payment transaction not found": "Không tìm thấy giao dịch thanh toán",
@@ -1060,6 +1105,9 @@
   }
 
   function translateText(value) {
+    const normalized = value.trim().replace(/\s+/g, ' ');
+    const exact = language === 'en' ? translations[normalized] : reverseTranslations.get(normalized);
+    if (exact) return value.replace(value.trim(), exact);
     if (language === 'en') {
       if (translations[value.trim()]) return value.replace(value.trim(), translations[value.trim()]);
       const translated = entries.reduce((text, [source, target]) => text.split(source).join(target), value);

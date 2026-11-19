@@ -549,3 +549,6 @@ tr:hover td { background: #fafafa; }
   .form-row { grid-template-columns: 1fr; }
   .page-header { flex-direction: column; }
 }
+
+/* Unread conversations in the shared navigation. */
+.chat-entry-count{background:#f6c85f;color:#183a40;border-radius:20px;min-width:23px;padding:3px 6px;text-align:center;font-size:12px}.chat-entry-count[hidden]{display:none}
