@@ -1,6 +1,23 @@
 (function () {
   const STORAGE_KEY = 'vinhomes-language';
   const translations = {
+    "Thông báo chung": "General notice",
+    "HĐ sắp hết hạn": "Contract expiring soon",
+    "HĐ đã duyệt": "Contract approved",
+    "HĐ bị từ chối": "Contract rejected",
+    "Yêu cầu bảo trì": "Maintenance request",
+    "Phân công bảo trì": "Maintenance assignment",
+    "Bảo trì thiết bị": "Equipment maintenance",
+    "Không có thông báo phù hợp": "No matching notifications",
+    "Xóa bộ lọc": "Clear filters",
+    "Cập nhật mới nhất về căn hộ và dịch vụ của bạn": "The latest updates about your apartment and services",
+    "Tìm thông báo": "Search notifications",
+    "Tìm theo tiêu đề hoặc nội dung...": "Search by title or message...",
+    "Loại thông báo": "Notification category",
+    "Tất cả loại thông báo": "All categories",
+    "Đóng thông báo": "Close notification",
+    "Xem chi tiết": "View details",
+    "thông báo": "notifications",
     "Họ tên là bắt buộc": "Full name is required",
     "Họ tên phải từ 2-100 ký tự": "Full name must contain 2\u2013100 characters",
     "CCCD là bắt buộc": "Citizen ID is required",
@@ -1062,6 +1079,7 @@
   }
 
   function translateNode(node) {
+    if (node.parentElement?.closest('[data-no-translate], .site-language-switcher')) return;
     const prior = originals.get(node);
     const source = prior && node.nodeValue === prior.translated ? prior.source : node.nodeValue;
     const translated = translateText(source);
