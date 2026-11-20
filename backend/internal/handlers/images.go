@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"image"
 	"image/jpeg"
@@ -10,9 +11,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/uit/vinhomes-management/internal/database"
@@ -33,6 +39,99 @@ func imageDirectory() string {
 	return "" // Never silently store production files on an ephemeral filesystem.
 }
 func imagePath(id string) string { return filepath.Join(imageDirectory(), id+".jpg") }
+
+func imageBackend() string {
+	account, bucket := os.Getenv("R2_ACCOUNT_ID"), os.Getenv("R2_BUCKET")
+	access, secret := os.Getenv("R2_ACCESS_KEY_ID"), os.Getenv("R2_SECRET_ACCESS_KEY")
+	configured := account != "" || bucket != "" || access != "" || secret != ""
+	if configured {
+		if account == "" || bucket == "" || access == "" || secret == "" {
+			return ""
+		}
+		return "r2"
+	}
+	if imageDirectory() != "" {
+		return "filesystem"
+	}
+	return ""
+}
+
+func r2Client() (*s3.Client, string, error) {
+	account, bucket := os.Getenv("R2_ACCOUNT_ID"), os.Getenv("R2_BUCKET")
+	access, secret := os.Getenv("R2_ACCESS_KEY_ID"), os.Getenv("R2_SECRET_ACCESS_KEY")
+	if account == "" || bucket == "" || access == "" || secret == "" || strings.ContainsAny(account+bucket, "/\\") {
+		return nil, "", errors.New("R2 image storage is not configured")
+	}
+	cfg, err := awsconfig.LoadDefaultConfig(context.Background(),
+		awsconfig.WithRegion("auto"),
+		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(access, secret, "")),
+	)
+	if err != nil {
+		return nil, "", err
+	}
+	endpoint := "https://" + account + ".r2.cloudflarestorage.com"
+	return s3.NewFromConfig(cfg, func(options *s3.Options) {
+		options.BaseEndpoint = aws.String(endpoint)
+		options.UsePathStyle = true
+	}), bucket, nil
+}
+
+func saveImage(backend, id string, data []byte) error {
+	if backend == "r2" {
+		client, bucket, err := r2Client()
+		if err != nil {
+			return err
+		}
+		_, err = client.PutObject(context.Background(), &s3.PutObjectInput{Bucket: aws.String(bucket), Key: aws.String("images/" + id + ".jpg"), Body: bytes.NewReader(data), ContentType: aws.String("image/jpeg")})
+		return err
+	}
+	if backend != "filesystem" {
+		return errors.New("image storage is unavailable")
+	}
+	if err := os.MkdirAll(imageDirectory(), 0700); err != nil {
+		return err
+	}
+	return os.WriteFile(imagePath(id), data, 0600)
+}
+
+func readImage(backend, id string) ([]byte, error) {
+	if backend == "r2" {
+		client, bucket, err := r2Client()
+		if err != nil {
+			return nil, err
+		}
+		object, err := client.GetObject(context.Background(), &s3.GetObjectInput{Bucket: aws.String(bucket), Key: aws.String("images/" + id + ".jpg")})
+		if err != nil {
+			return nil, err
+		}
+		defer object.Body.Close()
+		return io.ReadAll(io.LimitReader(object.Body, 3<<20))
+	}
+	if backend != "filesystem" {
+		return nil, errors.New("image storage is unavailable")
+	}
+	return os.ReadFile(imagePath(id))
+}
+
+func removeImage(backend, id string) error {
+	if backend == "r2" {
+		client, bucket, err := r2Client()
+		if err != nil {
+			return err
+		}
+		_, err = client.DeleteObject(context.Background(), &s3.DeleteObjectInput{Bucket: aws.String(bucket), Key: aws.String("images/" + id + ".jpg")})
+		return err
+	}
+	if backend != "filesystem" {
+		return errors.New("image storage is unavailable")
+	}
+	err := os.Remove(imagePath(id))
+	if os.IsNotExist(err) {
+		return nil
+	}
+	return err
+}
+
 func validImageIDs(tx *gorm.DB, ids []string, owner, purpose, conversation string) error {
 	if len(ids) > 5 {
 		return errors.New("Choose up to 5 images")
@@ -54,7 +153,8 @@ func validImageIDs(tx *gorm.DB, ids []string, owner, purpose, conversation strin
 	return nil
 }
 func UploadImage(c *gin.Context) {
-	if imageDirectory() == "" {
+	backend := imageBackend()
+	if backend == "" {
 		c.JSON(503, gin.H{"error": "Image storage is unavailable"})
 		return
 	}
@@ -127,13 +227,13 @@ func UploadImage(c *gin.Context) {
 		c.JSON(409, gin.H{"error": "Image storage limit reached"})
 		return
 	}
-	asset := models.ImageAsset{ID: uuid.NewString(), OwnerID: c.GetString("user_id"), Purpose: purpose, ConversationID: conversation, Size: int64(output.Len()), CreatedAt: time.Now()}
-	if os.MkdirAll(imageDirectory(), 0700) != nil || os.WriteFile(imagePath(asset.ID), output.Bytes(), 0600) != nil {
+	asset := models.ImageAsset{ID: uuid.NewString(), OwnerID: c.GetString("user_id"), Purpose: purpose, ConversationID: conversation, StorageBackend: backend, Size: int64(output.Len()), CreatedAt: time.Now()}
+	if saveImage(backend, asset.ID, output.Bytes()) != nil {
 		c.JSON(503, gin.H{"error": "Image storage is unavailable"})
 		return
 	}
 	if database.DB.Create(&asset).Error != nil {
-		os.Remove(imagePath(asset.ID))
+		_ = removeImage(backend, asset.ID)
 		c.JSON(500, gin.H{"error": "Unable to save image"})
 		return
 	}
@@ -176,14 +276,19 @@ func GetImage(c *gin.Context) {
 		c.AbortWithStatus(403)
 		return
 	}
-	if imageDirectory() == "" {
-		c.AbortWithStatus(503)
-		return
-	}
 	c.Header("Cache-Control", "private, no-store")
 	c.Header("X-Content-Type-Options", "nosniff")
 	c.Header("Content-Type", "image/jpeg")
-	c.File(imagePath(id))
+	backend := asset.StorageBackend
+	if backend == "" {
+		backend = "filesystem"
+	} // Existing rows used the original volume backend.
+	data, err := readImage(backend, id)
+	if err != nil {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	c.Data(http.StatusOK, "image/jpeg", data)
 }
 func DeleteUnusedImage(c *gin.Context) {
 	imageWriteLock.Lock()
@@ -197,11 +302,15 @@ func DeleteUnusedImage(c *gin.Context) {
 		c.JSON(409, gin.H{"error": "Attached images cannot be removed"})
 		return
 	}
-	if imageDirectory() == "" {
+	backend := asset.StorageBackend
+	if backend == "" {
+		backend = "filesystem"
+	}
+	if backend == "" {
 		c.AbortWithStatus(503)
 		return
 	}
-	if err := os.Remove(imagePath(asset.ID)); err != nil && !os.IsNotExist(err) {
+	if err := removeImage(backend, asset.ID); err != nil {
 		c.AbortWithStatus(500)
 		return
 	}

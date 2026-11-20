@@ -361,11 +361,12 @@ type ChatMessage struct {
 	Sender         User             `gorm:"foreignKey:SenderID" json:"-"`
 }
 
-// ImageAsset metadata lives in PostgreSQL; image bytes live on a persistent volume.
+// ImageAsset metadata lives in PostgreSQL; image bytes live in private object storage.
 type ImageAsset struct {
 	ID             string    `gorm:"primaryKey" json:"id"`
 	OwnerID        string    `gorm:"index" json:"-"`
 	Purpose        string    `json:"-"`
+	StorageBackend string    `gorm:"default:filesystem" json:"-"`
 	ConversationID string    `gorm:"index" json:"-"`
 	MaintenanceID  string    `gorm:"index" json:"-"`
 	Size           int64     `json:"size"`
