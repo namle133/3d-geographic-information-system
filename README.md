@@ -120,6 +120,12 @@ The integration script starts and removes an isolated PostgreSQL test container.
 
 VNPay is currently configured for **sandbox testing**. Terminal approval and IPN registration are managed by VNPay. See [VNPay deployment notes](backend/VNPAY_DEPLOYMENT.md) for configuration and callback behavior. Keep credentials in environment variables.
 
+## 🔎 Google Search Console
+
+The public 3D model is listed in [sitemap.xml](https://3d-geographic-information-system.vercel.app/sitemap.xml), advertised by [robots.txt](https://3d-geographic-information-system.vercel.app/robots.txt). Login and portal pages send `X-Robots-Tag: noindex, follow`; authentication remains responsible for protecting private data.
+
+The URL-prefix property is `https://3d-geographic-information-system.vercel.app/`. Keep the Google verification tags in both `index.html` and `pages/login.html`: the site root redirects to the login page, which Google checks during verification. Search Console verification and sitemap submission do not guarantee indexing or rankings.
+
 ## 📚 Academic context
 
 Built for learning 3D GIS visualization and property management workflows. The model is an approximate representation, rather than a survey or construction reference.
