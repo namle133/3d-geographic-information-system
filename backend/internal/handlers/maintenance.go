@@ -12,6 +12,7 @@ import (
 	"github.com/uit/vinhomes-management/internal/database"
 	"github.com/uit/vinhomes-management/internal/models"
 	"github.com/uit/vinhomes-management/internal/services"
+	"gorm.io/gorm"
 )
 
 type CreateMaintenanceReqPayload struct {
@@ -31,11 +32,12 @@ type AssignMaintenanceReqPayload struct {
 }
 
 type CompleteMaintenanceReqPayload struct {
-	CompletionNotes string  `json:"completion_notes"`
-	Resolution      string  `json:"resolution"`
-	Notes           string  `json:"notes"`
-	Cost            float64 `json:"cost"`
-	TechnicianName  string  `json:"technician_name"`
+	Photos          []string `json:"photos"`
+	CompletionNotes string   `json:"completion_notes"`
+	Resolution      string   `json:"resolution"`
+	Notes           string   `json:"notes"`
+	Cost            float64  `json:"cost"`
+	TechnicianName  string   `json:"technician_name"`
 }
 
 type RegisterEquipmentRequest struct {
@@ -60,7 +62,7 @@ func mapPriorityToBackend(p string) string {
 }
 
 func resolveResidentID(c *gin.Context, apartmentID, residentID string) (string, error) {
-	if residentID != "" {
+	if residentID != "" && c.GetString("role") != "resident" {
 		return residentID, nil
 	}
 	if role, ok := c.Get("role"); ok && role.(string) == "resident" {
@@ -121,7 +123,20 @@ func CreateMaintenanceRequest(c *gin.Context) {
 		maintenanceReq.AssignedAt = &now
 	}
 
-	if err := database.DB.Create(&maintenanceReq).Error; err != nil {
+	imageWriteLock.Lock()
+	defer imageWriteLock.Unlock()
+	if err := database.DB.Transaction(func(tx *gorm.DB) error {
+		if err := validImageIDs(tx, req.Photos, c.GetString("user_id"), "maintenance", ""); err != nil {
+			return err
+		}
+		if err := tx.Create(&maintenanceReq).Error; err != nil {
+			return err
+		}
+		if len(req.Photos) > 0 {
+			return tx.Model(&models.ImageAsset{}).Where("id IN ?", req.Photos).Update("maintenance_id", maintenanceReq.ID).Error
+		}
+		return nil
+	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create maintenance request"})
 		return
 	}
@@ -136,29 +151,29 @@ func CreateMaintenanceRequest(c *gin.Context) {
 }
 
 type MaintenanceListItem struct {
-	ID               string     `json:"id"`
-	RequestCode      string     `json:"request_code"`
-	RequestNumber    string     `json:"request_number"`
-	ApartmentID      string     `json:"apartment_id"`
-	ApartmentCode    string     `json:"apartment_code"`
-	ApartmentNumber  string     `json:"apartment_number"`
-	ResidentID       string     `json:"resident_id"`
-	ResidentName     string     `json:"resident_name"`
-	IssueType        string     `json:"issue_type"`
-	Description      string     `json:"description"`
-	Priority         string     `json:"priority"`
-	Location         string     `json:"location"`
-	Status           string     `json:"status"`
-	AssignedTo       *string    `json:"assigned_to,omitempty"`
-	AssignedToName   string     `json:"assigned_to_name"`
-	AssignedAt       *time.Time `json:"assigned_at,omitempty"`
-	CompletedAt      *time.Time `json:"completed_at,omitempty"`
-	CompletedDate    *time.Time `json:"completed_date,omitempty"`
-	CompletionNotes  string     `json:"completion_notes,omitempty"`
-	Resolution       string     `json:"resolution,omitempty"`
-	CreatedAt        time.Time  `json:"created_at"`
-	CreatedDate      time.Time  `json:"created_date"`
-	Photos           []string   `json:"photos,omitempty"`
+	ID              string     `json:"id"`
+	RequestCode     string     `json:"request_code"`
+	RequestNumber   string     `json:"request_number"`
+	ApartmentID     string     `json:"apartment_id"`
+	ApartmentCode   string     `json:"apartment_code"`
+	ApartmentNumber string     `json:"apartment_number"`
+	ResidentID      string     `json:"resident_id"`
+	ResidentName    string     `json:"resident_name"`
+	IssueType       string     `json:"issue_type"`
+	Description     string     `json:"description"`
+	Priority        string     `json:"priority"`
+	Location        string     `json:"location"`
+	Status          string     `json:"status"`
+	AssignedTo      *string    `json:"assigned_to,omitempty"`
+	AssignedToName  string     `json:"assigned_to_name"`
+	AssignedAt      *time.Time `json:"assigned_at,omitempty"`
+	CompletedAt     *time.Time `json:"completed_at,omitempty"`
+	CompletedDate   *time.Time `json:"completed_date,omitempty"`
+	CompletionNotes string     `json:"completion_notes,omitempty"`
+	Resolution      string     `json:"resolution,omitempty"`
+	CreatedAt       time.Time  `json:"created_at"`
+	CreatedDate     time.Time  `json:"created_date"`
+	Photos          []string   `json:"photos,omitempty"`
 }
 
 func buildMaintenanceListItem(req models.MaintenanceRequest) MaintenanceListItem {
@@ -356,13 +371,27 @@ func CompleteMaintenanceRequest(c *gin.Context) {
 	}
 
 	now := time.Now()
-	if err := database.DB.Model(&models.MaintenanceRequest{}).Where("id = ?", id).
-		Updates(map[string]interface{}{
-			"status":           "completed",
-			"completed_at":     now,
-			"completion_notes": notes,
-			"updated_at":       now,
-		}).Error; err != nil {
+	imageWriteLock.Lock()
+	defer imageWriteLock.Unlock()
+	if err := database.DB.Transaction(func(tx *gorm.DB) error {
+		var current models.MaintenanceRequest
+		if err := tx.First(&current, "id = ?", id).Error; err != nil {
+			return err
+		}
+		if err := validImageIDs(tx, req.Photos, c.GetString("user_id"), "maintenance", ""); err != nil {
+			return err
+		}
+		if len(current.Photos)+len(req.Photos) > 10 {
+			return fmt.Errorf("Too many photos")
+		}
+		if err := tx.Model(&current).Updates(map[string]interface{}{"status": "completed", "completed_at": now, "completion_notes": notes, "updated_at": now, "photos": pq.StringArray(append(current.Photos, req.Photos...))}).Error; err != nil {
+			return err
+		}
+		if len(req.Photos) > 0 {
+			return tx.Model(&models.ImageAsset{}).Where("id IN ?", req.Photos).Update("maintenance_id", id).Error
+		}
+		return nil
+	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to complete request"})
 		return
 	}

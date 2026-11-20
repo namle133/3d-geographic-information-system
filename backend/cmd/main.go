@@ -142,6 +142,9 @@ func main() {
 		protected.PUT("/notifications/read-all", handlers.MarkAllNotificationsAsRead)
 		protected.DELETE("/notifications/:id", handlers.DeleteNotification)
 
+		protected.POST("/images", handlers.UploadImage)
+		protected.GET("/images/:imageId", handlers.GetImage)
+		protected.DELETE("/images/:imageId", handlers.DeleteUnusedImage)
 		// Private resident/admin messaging
 		protected.GET("/chat/unread", handlers.ChatUnread)
 		protected.GET("/chat/people", middleware.RequireRole("admin"), handlers.ChatPeople)

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-async function page(role = 'resident', overrides = {}) {
+async function page(role = 'resident', overrides = {}, media = {}) {
   const elements = new Map();
   const element = id => {
     if (!elements.has(id)) elements.set(id, {value:'', innerHTML:'', textContent:'', hidden:false, disabled:false, scrollTop:0, scrollHeight:400, clientHeight:400,
@@ -11,8 +11,8 @@ async function page(role = 'resident', overrides = {}) {
     return elements.get(id);
   };
   const calls = [], items = [{id:'one', body:'<img src=x onerror=alert(1)>', from_admin:true, created_at:'2026-11-19T01:00:00Z'}];
-  const api = {start:async()=>({data:{id:'resident-thread',status:'open'}}),people:async()=>({data:[]}),messages:async()=>({data:items,conversation:{id:'resident-thread',status:'open'},has_more:false}),read:async()=>{},send:async(id,body,nonce)=>{calls.push({id,body,nonce});return {data:{id:'sent',body,from_admin:false,created_at:'2026-11-19T02:00:00Z'}}},...overrides};
-  const scope={document:{getElementById:element,querySelectorAll:()=>[],hidden:false},window:{addEventListener(){}},initLayout:async()=>true,authManager:{getUserRole:()=>role},chatAPI:api,formatDate:x=>x,crypto:{randomUUID:()=>String(Math.random())},setInterval(){}};
+  const api = {start:async()=>({data:{id:'resident-thread',status:'open'}}),people:async()=>({data:[]}),messages:async()=>({data:items,conversation:{id:'resident-thread',status:'open'},has_more:false}),read:async()=>{},send:async(id,body,nonce,imageIDs)=>{calls.push({id,body,nonce,imageIDs});return {data:{id:'sent',body,from_admin:false,created_at:'2026-11-19T02:00:00Z'}}},...overrides};
+  const scope={imageGallery:()=>"",hydrateImages:()=>{},imagesAPI:{...media},document:{getElementById:element,querySelectorAll:()=>[],hidden:false},window:{addEventListener(){}},initLayout:async()=>true,authManager:{getUserRole:()=>role},chatAPI:api,formatDate:x=>x,crypto:{randomUUID:()=>String(Math.random())},setInterval(){}};
   const script=fs.readFileSync(new URL('../js/modules/chat.js',import.meta.url),'utf8').replace(/^import .*;\s*$/mg,'');
   await new vm.Script('(async()=>{'+script+';return {selectPerson,refreshMessages,drawPeople};})()').runInNewContext(scope).then(result=>scope.controls=result);
   return {element, calls, controls:scope.controls};
@@ -40,4 +40,14 @@ test('switching conversations discards late responses from the previous user',as
   release({data:{id:'slow'}});await slow;
   assert.equal(p.element('chatName').textContent,'Fast');
   assert.match(p.element('chatMessages').innerHTML,/fast/);assert.doesNotMatch(p.element('chatMessages').innerHTML,/slow/);
+});
+
+test('an uploaded image can be sent without text and stays attached to its conversation',async()=>{
+ const id='12345678-1234-4234-8234-123456789abc';
+ const p=await page('resident',{}, {upload:async()=>({data:{id}})});
+ await p.element('chatImageInput').events.change({target:{files:[{type:'image/png'}],value:'sample'}});
+ assert.equal(p.element('chatDraft').required,false);
+ await p.element('chatForm').events.submit({preventDefault(){}});
+ assert.deepEqual([...p.calls[0].imageIDs],[id]);assert.equal(p.calls[0].body,'');
+ assert.equal(p.element('chatDraft').required,true);
 });

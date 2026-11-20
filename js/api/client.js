@@ -76,7 +76,7 @@ class APIClient {
       ...options,
     };
 
-    if (options.body && typeof options.body === 'object') {
+    if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
       config.body = JSON.stringify(options.body);
     }
 

@@ -142,3 +142,11 @@ Built for learning 3D GIS visualization and property management workflows. The m
 ### Chat delivery
 
 Chat uses a single WebSocket connection per portal page. Message writes still use the authenticated HTTP API; WebSocket events immediately refresh the conversation and unread counts. Reconnecting clients reload saved history. The event hub currently runs in one backend instance; horizontal scaling requires a shared event bus (such as Redis Pub/Sub) before adding replicas.
+
+### Image attachments on Railway
+
+Residents and the building team can attach photos to maintenance requests and chat messages. JPEG and PNG uploads are limited to five images at 2 MiB each (16 megapixels maximum). Images are re-encoded as JPEG to remove embedded metadata. Completion reports can add five more photos to a maintenance request.
+
+Image bytes are stored in a private Cloudflare R2 bucket; PostgreSQL stores image metadata and attachment references. Configure these backend variables in Railway: `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY`. Create an R2 API token scoped to the bucket with object read/write access. Images stay private and are served through authenticated application endpoints, so the R2 credentials and bucket are never exposed to browsers. For local development, set `UPLOAD_DIR` to an absolute path; Railway volume storage remains supported for existing attachments and legacy deployments.
+
+Images are fetched through authenticated endpoints with conversation/request access checks. Original maintenance photos saved as base64 remain readable. Storage is capped at 50 MiB per uploader and 400 MiB overall in PostgreSQL metadata. R2 provides durable object storage shared across backend replicas; back up PostgreSQL metadata alongside the R2 bucket when migrating or restoring the service.
