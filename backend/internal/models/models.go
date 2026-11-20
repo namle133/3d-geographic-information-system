@@ -349,6 +349,7 @@ type ChatConversation struct {
 	User          User       `gorm:"foreignKey:UserID" json:"-"`
 }
 type ChatMessage struct {
+	ImageIDs       pq.StringArray   `gorm:"type:text[]" json:"image_ids,omitempty"`
 	ID             string           `gorm:"primaryKey" json:"id"`
 	ConversationID string           `gorm:"index:idx_chat_order,priority:1" json:"conversation_id"`
 	SenderID       string           `gorm:"index" json:"sender_id"`
@@ -358,4 +359,15 @@ type ChatMessage struct {
 	CreatedAt      time.Time        `gorm:"index:idx_chat_order,priority:2" json:"created_at"`
 	Conversation   ChatConversation `gorm:"foreignKey:ConversationID" json:"-"`
 	Sender         User             `gorm:"foreignKey:SenderID" json:"-"`
+}
+
+// ImageAsset metadata lives in PostgreSQL; image bytes live on a persistent volume.
+type ImageAsset struct {
+	ID             string    `gorm:"primaryKey" json:"id"`
+	OwnerID        string    `gorm:"index" json:"-"`
+	Purpose        string    `json:"-"`
+	ConversationID string    `gorm:"index" json:"-"`
+	MaintenanceID  string    `gorm:"index" json:"-"`
+	Size           int64     `json:"size"`
+	CreatedAt      time.Time `json:"created_at"`
 }

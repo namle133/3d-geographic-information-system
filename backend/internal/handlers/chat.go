@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/uit/vinhomes-management/internal/database"
 	"github.com/uit/vinhomes-management/internal/models"
 	"gorm.io/gorm"
@@ -53,7 +54,7 @@ func ChatPeople(c *gin.Context) {
 	}
 	var people []person
 	err := database.DB.Raw(`SELECT u.id,u.username,u.email,u.role,u.status AS account_status,c.id AS conversation_id,c.status,c.last_message_at,
- COALESCE((SELECT body FROM chat_messages m WHERE m.conversation_id=c.id ORDER BY m.created_at DESC,m.id DESC LIMIT 1),'') AS preview,
+ COALESCE((SELECT CASE WHEN body='' THEN '📷' ELSE body END FROM chat_messages m WHERE m.conversation_id=c.id ORDER BY m.created_at DESC,m.id DESC LIMIT 1),'') AS preview,
  (SELECT COUNT(*) FROM chat_messages m WHERE m.conversation_id=c.id AND m.from_admin=false AND (c.admin_read_at IS NULL OR m.created_at>c.admin_read_at)) AS unread
  FROM users u LEFT JOIN chat_conversations c ON c.user_id=u.id WHERE u.role <> 'admin'
  ORDER BY c.last_message_at DESC NULLS LAST,u.username,u.id`).Scan(&people).Error
@@ -136,8 +137,9 @@ func SendChatMessage(c *gin.Context) {
 		return
 	}
 	var req struct {
-		Body     string `json:"body"`
-		ClientID string `json:"client_id"`
+		Body     string   `json:"body"`
+		ClientID string   `json:"client_id"`
+		ImageIDs []string `json:"image_ids"`
 	}
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 16384)
 	if c.ShouldBindJSON(&req) != nil {
@@ -145,7 +147,7 @@ func SendChatMessage(c *gin.Context) {
 		return
 	}
 	req.Body = strings.TrimSpace(req.Body)
-	if req.Body == "" || !utf8.ValidString(req.Body) || utf8.RuneCountInString(req.Body) > 2000 {
+	if (req.Body == "" && len(req.ImageIDs) == 0) || !utf8.ValidString(req.Body) || utf8.RuneCountInString(req.Body) > 2000 {
 		c.JSON(400, gin.H{"error": "Messages must contain 1–2000 characters"})
 		return
 	}
@@ -154,6 +156,8 @@ func SendChatMessage(c *gin.Context) {
 		return
 	}
 	var msg models.ChatMessage
+	imageWriteLock.Lock()
+	defer imageWriteLock.Unlock()
 	err := database.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(thread, "id = ?", thread.ID).Error; err != nil {
 			return err
@@ -167,7 +171,7 @@ func SendChatMessage(c *gin.Context) {
 		}
 		err := tx.First(&msg, "client_id = ?", req.ClientID).Error
 		if err == nil {
-			if msg.ConversationID != thread.ID || msg.SenderID != c.GetString("user_id") || msg.Body != req.Body {
+			if msg.ConversationID != thread.ID || msg.SenderID != c.GetString("user_id") || msg.Body != req.Body || strings.Join(msg.ImageIDs, ",") != strings.Join(req.ImageIDs, ",") {
 				return errors.New("conflict")
 			}
 			return nil
@@ -175,7 +179,10 @@ func SendChatMessage(c *gin.Context) {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
-		msg = models.ChatMessage{ID: uuid.NewString(), ConversationID: thread.ID, SenderID: c.GetString("user_id"), ClientID: req.ClientID, Body: req.Body, FromAdmin: chatAdmin(c), CreatedAt: time.Now()}
+		if err := validImageIDs(tx, req.ImageIDs, c.GetString("user_id"), "chat", thread.ID); err != nil {
+			return err
+		}
+		msg = models.ChatMessage{ImageIDs: pq.StringArray(req.ImageIDs), ID: uuid.NewString(), ConversationID: thread.ID, SenderID: c.GetString("user_id"), ClientID: req.ClientID, Body: req.Body, FromAdmin: chatAdmin(c), CreatedAt: time.Now()}
 		if err := tx.Create(&msg).Error; err != nil {
 			return err
 		}

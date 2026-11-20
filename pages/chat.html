@@ -6,6 +6,7 @@
     <title>Trò chuyện - Vinhomes</title>
     <link rel="stylesheet" href="../css/admin.css" />
     <link rel="stylesheet" href="../css/chat.css" />
+    <link rel="stylesheet" href="../css/images.css" />
     <script src="../js/env-config.js"></script>
     <script src="../js/i18n.js" defer></script>
   </head>
@@ -110,6 +111,17 @@
               aria-live="polite"
             ></div>
             <form id="chatForm" class="chat-composer">
+              <div id="chatAttachments" class="chat-attachment-preview"></div>
+              <input
+                type="file"
+                id="chatImageInput"
+                accept="image/jpeg,image/png"
+                multiple
+                hidden
+              />
+              <p class="chat-upload-hint">
+                JPEG/PNG · 2 MB/image · Up to 5 images
+              </p>
               <label for="chatDraft" class="chat-sr">Tin nhắn của bạn</label
               ><textarea
                 id="chatDraft"
@@ -119,6 +131,9 @@
                 required
               ></textarea>
               <div class="chat-composer-bottom">
+                <button type="button" id="chatAttach" class="chat-attach">
+                  Attach images
+                </button>
                 <span id="chatDraftCount">0 / 2000</span
                 ><button type="submit" id="chatSend">
                   Gửi tin nhắn <span aria-hidden="true">↗</span>

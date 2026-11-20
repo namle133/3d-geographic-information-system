@@ -8,10 +8,11 @@ export default {
     apiClient.get(
       `/chat/conversations/${encodeURIComponent(id)}/messages${before ? "?before=" + encodeURIComponent(before) : ""}`,
     ),
-  send: (id, body, clientID) =>
+  send: (id, body, clientID, imageIDs = []) =>
     apiClient.post(`/chat/conversations/${encodeURIComponent(id)}/messages`, {
       body,
       client_id: clientID,
+      image_ids: imageIDs,
     }),
   read: (id, messageID) =>
     apiClient.put(`/chat/conversations/${encodeURIComponent(id)}/read`, {

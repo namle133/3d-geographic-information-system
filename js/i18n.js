@@ -1,6 +1,26 @@
 (function () {
   const STORAGE_KEY = 'vinhomes-language';
   const translations = {
+    "Tải ảnh JPEG hoặc PNG tối đa 2 MB": "Upload a JPEG or PNG image up to 2 MB",
+    "Chọn ảnh JPEG hoặc PNG hợp lệ dưới 16 megapixel": "Use a valid JPEG or PNG image below 16 megapixels",
+    "Chọn tối đa 5 ảnh": "Choose up to 5 images",
+    "Đính kèm ảnh": "Attach images",
+    "Xóa ảnh": "Remove image",
+    "Ảnh đính kèm": "Attached image",
+    "Không thể tải ảnh": "Unable to load image",
+    "JPEG/PNG · 2 MB/ảnh · Tối đa 5 ảnh": "JPEG/PNG · 2 MB/image · Up to 5 images",
+    "Kho ảnh chưa sẵn sàng": "Image storage is unavailable",
+    "Mục đích tải ảnh không hợp lệ": "Invalid upload purpose",
+    "Chọn một ảnh": "Choose an image",
+    "Ảnh không hợp lệ": "Invalid image",
+    "Ảnh quá lớn": "Image is too large",
+    "Kho ảnh đã đạt giới hạn": "Image storage limit reached",
+    "Không thể lưu ảnh": "Unable to save image",
+    "Đang có nhiều ảnh tải lên. Vui lòng thử lại sau.": "Image uploads are busy. Try again shortly.",
+    "Không thể xóa ảnh đã đính kèm": "Attached images cannot be removed",
+    "Tham chiếu ảnh không hợp lệ": "Invalid image reference",
+    "Ảnh đã được đính kèm": "Image is already attached",
+
     "Tin nhắn chỉ hiển thị cho người dùng này và quản trị viên.": "Messages are visible only to this user and administrators.",
     "Trò chuyện": "Messages",
     "Trò chuyện với quản trị viên": "Chat with admin",

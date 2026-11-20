@@ -1,3 +1,4 @@
+import imagesAPI, { imageGallery, hydrateImages } from "../api/images.js";
 import { initLayout } from "./layout.js";
 import chatRealtime from "./chat-realtime.js";
 import authManager from "./auth-manager.js";
@@ -27,6 +28,7 @@ let people = [],
   olderAvailable = false,
   pendingID = null;
 const drafts = new Map();
+let attachments = [];
 function error(message = "") {
   $("chatError").textContent = message;
   $("chatError").hidden = !message;
@@ -70,10 +72,11 @@ function drawMessages(stick = false, older = false) {
     ? messages
         .map(
           (m) =>
-            `<div class="chat-message-row ${m.from_admin === admin ? "mine" : ""}"><div class="chat-message"><div class="chat-message-body" data-no-translate>${escape(m.body)}</div><time class="chat-message-time" datetime="${escape(m.created_at)}">${escape(formatDate(m.created_at, "dd/mm/yyyy hh:mm"))}</time></div></div>`,
+            `<div class="chat-message-row ${m.from_admin === admin ? "mine" : ""}"><div class="chat-message"><div class="chat-message-body" data-no-translate>${escape(m.body)}</div>${imageGallery(m.image_ids)}<time class="chat-message-time" datetime="${escape(m.created_at)}">${escape(formatDate(m.created_at, "dd/mm/yyyy hh:mm"))}</time></div></div>`,
         )
         .join("")
     : '<p class="chat-empty">Bắt đầu cuộc trò chuyện. Chúng tôi luôn sẵn lòng lắng nghe.</p>';
+  hydrateImages($("chatMessages"));
   $("chatOlder").hidden = !olderAvailable;
   if (older) history.scrollTop = history.scrollHeight - oldHeight + oldTop;
   else if (stick) history.scrollTop = history.scrollHeight;
@@ -114,12 +117,19 @@ async function refreshMessages(initial = false) {
 }
 async function selectPerson(person) {
   if (busy) return;
-  if (thread) drafts.set(thread.id, { body: $("chatDraft").value, pendingID });
+  if (thread)
+    drafts.set(thread.id, {
+      body: $("chatDraft").value,
+      pendingID,
+      attachments: [...attachments],
+    });
   const version = ++selectionVersion;
   selected = person;
   thread = null;
   messages = [];
   pendingID = null;
+  attachments = [];
+  drawAttachments();
   loading = false;
   error();
   $("chatWelcome").hidden = true;
@@ -143,6 +153,8 @@ async function selectPerson(person) {
     thread = opened;
     $("chatDraft").value = drafts.get(thread.id)?.body || "";
     pendingID = drafts.get(thread.id)?.pendingID || null;
+    attachments = [...(drafts.get(thread.id)?.attachments || [])];
+    drawAttachments();
     $("chatDraftCount").textContent = `${$("chatDraft").value.length} / 2000`;
     await refreshMessages(true);
     if (admin) await refreshPeople();
@@ -154,6 +166,63 @@ async function selectPerson(person) {
         !thread || Boolean(person && person.account_status !== "active");
   }
 }
+function drawAttachments() {
+  $("chatDraft").required = !attachments.length;
+  $("chatAttachments").innerHTML = attachments
+    .map(
+      (id) =>
+        `<div>${imageGallery([id])}<button type="button" data-remove-image="${id}" aria-label="Remove image">×</button></div>`,
+    )
+    .join("");
+  hydrateImages($("chatAttachments"));
+  $("chatAttachments")
+    .querySelectorAll("[data-remove-image]")
+    .forEach((button) =>
+      button.addEventListener("click", async () => {
+        if (busy) return;
+        try {
+          await imagesAPI.remove(button.dataset.removeImage);
+          attachments = attachments.filter(
+            (id) => id !== button.dataset.removeImage,
+          );
+          pendingID = null;
+          drawAttachments();
+        } catch (e) {
+          error(e.message);
+        }
+      }),
+    );
+}
+$("chatAttach").addEventListener("click", () => {
+  if (!busy && thread) $("chatImageInput").click();
+});
+$("chatImageInput").addEventListener("change", async (event) => {
+  if (busy || !thread) return;
+  const files = [...event.target.files];
+  event.target.value = "";
+  if (files.length + attachments.length > 5) {
+    error(tr("Choose up to 5 images"));
+    return;
+  }
+  busy = true;
+  $("chatSend").disabled = true;
+  $("chatAttach").disabled = true;
+  error();
+  try {
+    for (const file of files) {
+      const res = await imagesAPI.upload(file, "chat", thread.id);
+      attachments.push(res.data.id);
+      pendingID = null;
+      drawAttachments();
+    }
+  } catch (e) {
+    error(e.message);
+  } finally {
+    busy = false;
+    $("chatSend").disabled = false;
+    $("chatAttach").disabled = false;
+  }
+});
 $("chatSearch").addEventListener("input", drawPeople);
 document.querySelectorAll("[data-filter]").forEach((button) =>
   button.addEventListener("click", () => {
@@ -171,16 +240,18 @@ $("chatDraft").addEventListener("input", () => {
 $("chatForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const body = $("chatDraft").value.trim();
-  if (!thread || busy || !body) return;
+  if (!thread || busy || (!body && !attachments.length)) return;
   busy = true;
   error();
   $("chatSend").disabled = true;
   pendingID ||= crypto.randomUUID();
   try {
-    const res = await chatAPI.send(thread.id, body, pendingID);
+    const res = await chatAPI.send(thread.id, body, pendingID, attachments);
     if (!messages.some((m) => m.id === res.data.id)) messages.push(res.data);
     $("chatDraft").value = "";
     drafts.delete(thread.id);
+    attachments = [];
+    drawAttachments();
     pendingID = null;
     $("chatDraftCount").textContent = "0 / 2000";
     thread.status = "open";

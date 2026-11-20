@@ -645,6 +645,7 @@
   <!-- Runtime environment config -->
   <script src="../js/env-config.js"></script>
   <script src="../js/i18n.js" defer></script>
+  <link rel="stylesheet" href="../css/images.css" />
 </head>
 <body>
   <div id="navbar-placeholder"></div>
@@ -793,11 +794,11 @@
         </div>
 
         <div class="form-group">
-          <label>Tải ảnh (không bắt buộc)</label>
+          <label>Tải ảnh (không bắt buộc)</label><p>JPEG/PNG · 2 MB/image · Up to 5 images</p>
           <div class="file-input-wrapper">
             <label class="file-input-label">
               📷 Nhấp để chọn ảnh hoặc kéo thả ảnh vào đây
-              <input type="file" id="createPhotos" multiple accept="image/*" />
+              <input type="file" id="createPhotos" multiple accept="image/jpeg,image/png" />
             </label>
           </div>
           <div id="createPhotoPreview" class="file-preview"></div>
@@ -879,7 +880,7 @@
           <div class="file-input-wrapper">
             <label class="file-input-label">
               📷 Nhấp để chọn ảnh
-              <input type="file" id="completePhotos" multiple accept="image/*" />
+              <input type="file" id="completePhotos" multiple accept="image/jpeg,image/png" />
             </label>
           </div>
           <div id="completePhotoPreview" class="file-preview"></div>
@@ -910,6 +911,7 @@
   <script type="module">
     import authManager from '../js/modules/auth-manager.js';
     import { initLayout } from '../js/modules/layout.js';
+    import imagesAPI, { validateImage, imageGallery, hydrateImages } from '../js/api/images.js';
     import maintenanceAPI from '../js/api/maintenance.js';
     import buildingAPI from '../js/api/buildings.js';
     import contractAPI from '../js/api/contracts.js';
@@ -1124,35 +1126,26 @@
     }
 
     function handleFileUpload(e, type) {
-      const files = Array.from(e.target.files);
-      const photosArray = type === 'create' ? createPhotos : completePhotos;
-      const previewId = type === 'create' ? 'createPhotoPreview' : 'completePhotoPreview';
-
-      files.forEach(file => {
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const photoData = {
-              name: file.name,
-              data: event.target.result,
-              file: file
-            };
-            photosArray.push(photoData);
-            renderPhotoPreview(previewId, photosArray);
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-
-      e.target.value = '';
+      const files=[...e.target.files]; e.target.value='';
+      const photosArray=type==='create'?createPhotos:completePhotos;
+      const previewId=type==='create'?'createPhotoPreview':'completePhotoPreview';
+      try {
+        if(files.length+photosArray.length>5)throw new Error(window.SiteI18n?.translate('Choose up to 5 images')||'Choose up to 5 images');
+        files.forEach(validateImage);
+        files.forEach(file=>photosArray.push({name:file.name,data:URL.createObjectURL(file),file}));
+        renderPhotoPreview(previewId,photosArray);
+      }catch(error){showToast(error.message,'error');}
     }
-
+    async function uploadPhotos(photos) {
+      for(const photo of photos){if(!photo.id)photo.id=(await imagesAPI.upload(photo.file,'maintenance')).data.id;}
+      return photos.map(photo=>photo.id);
+    }
     function renderPhotoPreview(previewId, photosArray) {
       const preview = document.getElementById(previewId);
       preview.innerHTML = photosArray
         .map((photo, index) => `
           <div class="file-preview-item">
-            <img src="${photo.data}" alt="${photo.name}" />
+            <img src="${photo.data}" alt="Attached image" />
             <button type="button" class="file-remove-btn" 
                     onclick="window.maintenanceApp.removePhoto('${previewId}', ${index})">
               ✕
@@ -1288,6 +1281,7 @@
 
     function resetCreateForm() {
       document.getElementById('createForm').reset();
+      createPhotos.forEach(photo=>URL.revokeObjectURL(photo.data));
       createPhotos = [];
       document.getElementById('createPhotoPreview').innerHTML = '';
       document.getElementById('createFormError').classList.remove('show');
@@ -1315,6 +1309,7 @@
       document.getElementById('completeNotes').value = '';
       document.getElementById('completeCost').value = '';
       document.getElementById('completeTechnician').value = request?.assigned_to_name || '';
+      completePhotos.forEach(photo=>URL.revokeObjectURL(photo.data));
       completePhotos = [];
       document.getElementById('completePhotoPreview').innerHTML = '';
       document.getElementById('completeFormError').classList.remove('show');
@@ -1345,6 +1340,8 @@
         return;
       }
 
+      if(e.submitter?.disabled)return;
+      if(e.submitter)e.submitter.disabled=true;
       try {
         const requestData = {
           apartment_id: apartmentId,
@@ -1352,7 +1349,7 @@
           priority: PRIORITY_UI_TO_API[priority] || priority,
           description,
           location,
-          photos: createPhotos.map((p) => p.data).slice(0, 5),
+          photos: await uploadPhotos(createPhotos),
         };
         if (currentResidentId) requestData.resident_id = currentResidentId;
         if (assignTo) requestData.assigned_to = assignTo;
@@ -1365,7 +1362,7 @@
       } catch (error) {
         console.error('Error creating request:', error);
         showFormError('createFormError', error.message || 'Lỗi tạo yêu cầu bảo trì');
-      }
+      } finally {if(e.submitter)e.submitter.disabled=false;}
     }
 
     async function handleAssignRequest(e) {
@@ -1407,12 +1404,15 @@
         return;
       }
 
+      if(e.submitter?.disabled)return;
+      if(e.submitter)e.submitter.disabled=true;
       try {
         await maintenanceAPI.completeMaintenanceRequest(selectedRequestId, {
           resolution,
           notes,
           cost,
           technician_name: technician,
+          photos: await uploadPhotos(completePhotos),
         });
         showToast('Yêu cầu bảo trì đã được hoàn thành', 'success');
         closeCompleteModal();
@@ -1421,7 +1421,7 @@
       } catch (error) {
         console.error('Error completing request:', error);
         showFormError('completeFormError', error.message || 'Lỗi hoàn thành yêu cầu');
-      }
+      } finally {if(e.submitter)e.submitter.disabled=false;}
     }
 
     function showFormError(elementId, message) {
@@ -1464,9 +1464,10 @@
     }
 
     window.maintenanceApp = {
-      removePhoto: (previewId, index) => {
+      removePhoto: async (previewId, index) => {
         const photosArray = previewId === 'createPhotoPreview' ? createPhotos : completePhotos;
-        photosArray.splice(index, 1);
+        const photo=photosArray[index];
+        try{if(photo.id)await imagesAPI.remove(photo.id);URL.revokeObjectURL(photo.data);photosArray.splice(index, 1);}catch(error){showToast(error.message,"error");return;}
         renderPhotoPreview(previewId, photosArray);
       },
       viewDetails: (requestId) => {
@@ -1499,6 +1500,10 @@
               <div><strong style="color:#666;font-size:12px;text-transform:uppercase">Ngày hoàn thành</strong><br/>
               ${formatDate(request.completed_at || request.completed_date)}</div>` : ''}
           </div>`;
+        document.getElementById('viewDetails').insertAdjacentHTML('beforeend',imageGallery(request.photos));
+        hydrateImages(document.getElementById('viewDetails'));
+        // Keep existing base64 photos readable without accepting arbitrary URLs.
+        for(const data of request.photos||[]){if(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(data)){const img=document.createElement('img');img.src=data;img.alt='Attached image';img.style.maxWidth='180px';document.getElementById('viewDetails').appendChild(img);}}
         document.getElementById('viewModal').classList.add('show');
       },
       openAssignModal,

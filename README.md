@@ -142,3 +142,11 @@ Built for learning 3D GIS visualization and property management workflows. The m
 ### Chat delivery
 
 Chat uses a single WebSocket connection per portal page. Message writes still use the authenticated HTTP API; WebSocket events immediately refresh the conversation and unread counts. Reconnecting clients reload saved history. The event hub currently runs in one backend instance; horizontal scaling requires a shared event bus (such as Redis Pub/Sub) before adding replicas.
+
+### Image attachments on Railway
+
+Residents and the building team can attach photos to maintenance requests and chat messages. JPEG and PNG uploads are limited to five images at 2 MiB each (16 megapixels maximum). Images are re-encoded as JPEG to remove embedded metadata. Completion reports can add five more photos to a maintenance request.
+
+Image bytes are stored on the backend's Railway volume mounted at `/data`, under `/data/images`. PostgreSQL stores image metadata and attachment references. The backend reads `RAILWAY_VOLUME_MOUNT_PATH` automatically; set `UPLOAD_DIR` to an absolute persistent directory for local development or another deployment. Without either setting, uploads return unavailable instead of writing to ephemeral storage.
+
+Images are fetched through authenticated endpoints with conversation/request access checks. Original maintenance photos saved as base64 remain readable. Storage is capped at 50 MiB per uploader and 400 MiB overall for the current small volume. The implementation requires one backend replica with the volume attached. Back up the volume together with PostgreSQL, as both are needed to restore attachments.
