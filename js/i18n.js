@@ -282,6 +282,7 @@
     'Đã thuê': 'Rented',
     'Chưa có căn hộ': 'No apartments yet',
     'Không có hóa đơn quá hạn': 'No overdue invoices',
+    'Thu tiền': 'Collect payment',
     'Không có yêu cầu chờ xử lý': 'No requests awaiting action',
     'Không có hợp đồng sắp hết hạn': 'No contracts expiring soon',
     'hóa đơn quá hạn': 'overdue invoices',
@@ -1126,6 +1127,12 @@
 
   function translateText(value) {
     const normalized = value.trim().replace(/\s+/g, ' ');
+    const dayCount = normalized.match(language === 'en' ? /^(\d+) ngày$/ : /^(\d+) days?$/);
+    if (dayCount) {
+      const count = Number(dayCount[1]);
+      const label = language === 'en' ? `${dayCount[1]} ${count === 1 ? 'day' : 'days'}` : `${dayCount[1]} ngày`;
+      return value.replace(value.trim(), label);
+    }
     const exact = language === 'en' ? translations[normalized] : reverseTranslations.get(normalized);
     if (exact) return value.replace(value.trim(), exact);
     if (language === 'en') {
