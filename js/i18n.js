@@ -444,6 +444,7 @@
     'Đang tải...': 'Loading...',
     'Thử lại': 'Try again',
     'Xem tất cả': 'View all',
+    'Xem ngay →': 'View now →',
     'Xem & thu tiền →': 'View & collect →',
     'Phạm Hùng, Mễ Trì, Nam Từ Liêm, Hà Nội': 'Pham Hung, Me Tri, Nam Tu Liem, Hanoi',
     'Mặt cắt chiều cao:': 'Height section:',

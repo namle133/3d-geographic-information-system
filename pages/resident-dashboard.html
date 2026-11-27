@@ -140,7 +140,7 @@
       const el = document.getElementById('pendingInvoices');
       if (!invoices.length) return;
       el.innerHTML = `<div class="table-responsive"><table>
-        <thead><tr><th>Mã HĐ</th><th>Kỳ</th><th>Số tiền</th><th>Hạn</th><th>Trạng thái</th></tr></thead>
+        <thead><tr><th>Mã HĐ</th><th>Kỳ thanh toán</th><th>Số tiền</th><th>Hạn</th><th>Trạng thái</th></tr></thead>
         <tbody>${invoices.map(i => `<tr>
           <td>${i.invoice_code || i.id}</td>
           <td>${i.billing_period || '-'}</td>

@@ -27,6 +27,15 @@ test('dashboard day counts and collection action follow the selected language',(
  assert.equal(t.translate('25 days'),'25 ngày');
  assert.equal(t.translate('Collect payment'),'Thu tiền');
 });
+test('resident dashboard billing period and notification link translate completely',()=>{
+ const t=translator('en');
+ assert.equal(t.translate('Kỳ thanh toán'),'Billing period');
+ assert.equal(t.translate('Xem ngay →'),'View now →');
+ t.setLanguage('vi');
+ assert.equal(t.translate('View now →'),'Xem ngay →');
+ const page=fs.readFileSync(new URL('../pages/resident-dashboard.html',import.meta.url),'utf8');
+ assert.match(page,/<th>Kỳ thanh toán<\/th>/);
+});
 test('all pages load localization and the 3D selector has a dedicated visible host',()=>{
  for(const path of ['index.html',...fs.readdirSync(new URL('../pages/',import.meta.url)).filter(p=>p.endsWith('.html')).map(p=>'pages/'+p)]) assert.match(fs.readFileSync(new URL('../'+path,import.meta.url),'utf8'),/js\/i18n\.js/);
  assert.match(fs.readFileSync(new URL('../index.html',import.meta.url),'utf8'),/gis-language-control/);
