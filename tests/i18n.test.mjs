@@ -17,6 +17,16 @@ test('legacy error aliases translate in the correct direction',()=>{
 test('GIS and recovery labels have complete translations',()=>{
  const t=translator('en');for(const text of ['Cột','Dốc','Lõi','Ngôn ngữ','Nhập email đã đăng ký. Mã đặt lại mật khẩu sẽ được gửi tới email đã đăng ký.']) assert.doesNotMatch(t.translate(text),/[À-ỹĐđ]/);
 });
+test('dashboard day counts and collection action follow the selected language',()=>{
+ const t=translator('en');
+ assert.equal(t.translate('1 ngày'),'1 day');
+ assert.equal(t.translate('25 ngày'),'25 days');
+ assert.equal(t.translate('Thu tiền'),'Collect payment');
+ t.setLanguage('vi');
+ assert.equal(t.translate('1 day'),'1 ngày');
+ assert.equal(t.translate('25 days'),'25 ngày');
+ assert.equal(t.translate('Collect payment'),'Thu tiền');
+});
 test('all pages load localization and the 3D selector has a dedicated visible host',()=>{
  for(const path of ['index.html',...fs.readdirSync(new URL('../pages/',import.meta.url)).filter(p=>p.endsWith('.html')).map(p=>'pages/'+p)]) assert.match(fs.readFileSync(new URL('../'+path,import.meta.url),'utf8'),/js\/i18n\.js/);
  assert.match(fs.readFileSync(new URL('../index.html',import.meta.url),'utf8'),/gis-language-control/);
